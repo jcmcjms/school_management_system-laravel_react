@@ -4,6 +4,10 @@ import { ChefHat, Package, Plus, ShoppingCart, Users } from 'lucide-react';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 
+const formatDate = (): string => {
+    return new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+};
+
 interface Stats {
     todayOrders: number;
     todayRevenue: number;
@@ -92,7 +96,7 @@ export default function AdminDashboard() {
                         <p className="text-muted-foreground">Manage your restaurant operations</p>
                     </div>
                     <div className="text-right text-sm text-muted-foreground">
-                        {now().format('MMMM DD, YYYY')}
+                        {formatDate()}
                     </div>
                 </div>
 

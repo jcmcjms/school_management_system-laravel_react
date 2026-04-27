@@ -12,7 +12,7 @@ import AuthLayout from '@/layouts/auth-layout';
 
 export default function ForgotPassword({ status }: { status?: string }) {
     const { data, setData, post, processing, errors } = useForm({
-        email: '',
+        id_number: '',
     });
 
     const submit: FormEventHandler = (e) => {
@@ -22,7 +22,7 @@ export default function ForgotPassword({ status }: { status?: string }) {
     };
 
     return (
-        <AuthLayout title="Forgot password" description="Enter your email to receive a password reset link">
+        <AuthLayout title="Forgot password" description="Enter your ID number to receive a password reset link">
             <Head title="Forgot password" />
 
             {status && <div className="mb-4 text-center text-sm font-medium text-green-600">{status}</div>}
@@ -30,19 +30,19 @@ export default function ForgotPassword({ status }: { status?: string }) {
             <div className="space-y-6">
                 <form onSubmit={submit}>
                     <div className="grid gap-2">
-                        <Label htmlFor="email">Email address</Label>
+                        <Label htmlFor="id_number">ID Number</Label>
                         <Input
-                            id="email"
-                            type="email"
-                            name="email"
+                            id="id_number"
+                            type="text"
+                            name="id_number"
                             autoComplete="off"
-                            value={data.email}
+                            value={data.id_number}
                             autoFocus
-                            onChange={(e) => setData('email', e.target.value)}
-                            placeholder="email@example.com"
+                            onChange={(e) => setData('id_number', e.target.value)}
+                            placeholder="Enter your student or employee ID"
                         />
 
-                        <InputError message={errors.email} />
+                        <InputError message={errors.id_number} />
                     </div>
 
                     <div className="my-6 flex items-center justify-start">

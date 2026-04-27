@@ -1,6 +1,6 @@
 import { Head, useForm } from '@inertiajs/react';
 import { LoaderCircle } from 'lucide-react';
-import { FormEventHandler } from 'react';
+import { FormEventHandler, useState } from 'react';
 
 import InputError from '@/components/input-error';
 import TextLink from '@/components/text-link';
@@ -8,11 +8,19 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import AuthLayout from '@/layouts/auth-layout';
 
 interface LoginForm {
     id_number: string;
     password: string;
+    role: string;
     remember: boolean;
 }
 
@@ -22,16 +30,29 @@ interface LoginProps {
 }
 
 export default function Login({ status, canResetPassword }: LoginProps) {
+    const [showRoleSelect, setShowRoleSelect] = useState(false);
     const { data, setData, post, processing, errors, reset } = useForm<LoginForm>({
         id_number: '',
         password: '',
+        role: 'auto',
         remember: false,
     });
+
+    const handleIdNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setData('id_number', e.target.value);
+        setShowRoleSelect(false);
+        setData('role', 'auto');
+    };
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
         post(route('login'), {
             onFinish: () => reset('password'),
+            onError: (errors) => {
+                if (errors.id_number === 'multiple' || errors.id_number?.includes('Multiple accounts')) {
+                    setShowRoleSelect(true);
+                }
+            },
         });
     };
 
@@ -51,11 +72,32 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                             tabIndex={1}
                             autoComplete="username"
                             value={data.id_number}
-                            onChange={(e) => setData('id_number', e.target.value)}
+                            onChange={handleIdNumberChange}
                             placeholder="Enter your ID number"
                         />
                         <InputError message={errors.id_number} />
                     </div>
+
+                    {showRoleSelect && (
+                        <div className="grid gap-2">
+                            <Label htmlFor="role">I am a...</Label>
+                            <Select
+                                value={data.role}
+                                onValueChange={(value) => setData('role', value)}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select your role" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="student">Student</SelectItem>
+                                    <SelectItem value="parent">Parent/Guardian</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <p className="text-xs text-muted-foreground">
+                                Multiple accounts found with this ID number. Please select your role.
+                            </p>
+                        </div>
+                    )}
 
                     <div className="grid gap-2">
                         <div className="flex items-center">

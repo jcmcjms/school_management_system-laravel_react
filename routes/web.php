@@ -16,19 +16,29 @@ Route::get('/', function () {
 Route::get('/menu', [MenuController::class, 'index'])->name('menu');
 Route::get('/menu/{menuItem}', [MenuController::class, 'show'])->name('menu.show');
 
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'role:admin,manager,staff,faculty,student,parent'])->group(function () {
     Route::get('dashboard', [RedirectController::class, 'index'])->name('dashboard');
+});
 
-    Route::get('admin/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard')->middleware('role:admin');
+Route::middleware(['auth', 'role:admin'])->group(function () {
+    Route::get('admin/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
+});
 
-    Route::get('manager/dashboard', [AdminDashboardController::class, 'index'])->name('manager.dashboard')->middleware('role:manager');
+Route::middleware(['auth', 'role:manager'])->group(function () {
+    Route::get('manager/dashboard', [AdminDashboardController::class, 'index'])->name('manager.dashboard');
+});
 
-    Route::get('staff/dashboard', [StaffDashboardController::class, 'index'])->name('staff.dashboard')->middleware('role:staff');
-    Route::patch('staff/orders/{order}', [StaffDashboardController::class, 'updateStatus'])->name('staff.orders.update')->middleware('role:staff');
+Route::middleware(['auth', 'role:staff'])->group(function () {
+    Route::get('staff/dashboard', [StaffDashboardController::class, 'index'])->name('staff.dashboard');
+    Route::patch('staff/orders/{order}', [StaffDashboardController::class, 'updateStatus'])->name('staff.orders.update');
+});
 
-    Route::get('faculty/dashboard', [FacultyDashboardController::class, 'index'])->name('faculty.dashboard')->middleware('role:faculty');
+Route::middleware(['auth', 'role:faculty'])->group(function () {
+    Route::get('faculty/dashboard', [FacultyDashboardController::class, 'index'])->name('faculty.dashboard');
+});
 
-    Route::get('customer/dashboard', [CustomerDashboardController::class, 'index'])->name('customer.dashboard')->middleware('role:student,parent');
+Route::middleware(['auth', 'role:student,parent'])->group(function () {
+    Route::get('customer/dashboard', [CustomerDashboardController::class, 'index'])->name('customer.dashboard');
 });
 
 require __DIR__.'/settings.php';
