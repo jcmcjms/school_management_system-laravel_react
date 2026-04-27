@@ -29,7 +29,6 @@ class LoginRequest extends FormRequest
         return [
             'id_number' => ['required', 'string'],
             'password' => ['required', 'string'],
-            'role' => ['nullable', 'string', 'in:auto,student,parent'],
         ];
     }
 
@@ -44,45 +43,11 @@ class LoginRequest extends FormRequest
 
         $idNumber = $this->input('id_number');
         $password = $this->input('password');
-        $role = $this->input('role', 'auto');
 
-        $query = \App\Models\User::where(function ($q) use ($idNumber) {
-            $q->where('student_id', $idNumber)
-              ->orWhere('employee_id', $idNumber);
-        });
-
-        $users = $query->get();
-
-        if ($users->isEmpty()) {
-            RateLimiter::hit($this->throttleKey());
-            throw ValidationException::withMessages([
-                'id_number' => __('auth.failed'),
-            ]);
-        }
-
-        if ($users->count() > 1 && $role === 'auto') {
-            $hasMultiple = $users->filter(fn($u) => in_array($u->role, ['student', 'parent']))->count() > 1;
-            if ($hasMultiple) {
-                throw ValidationException::withMessages([
-                    'id_number' => 'Multiple accounts found. Please select your role.',
-                ]);
-            }
-        }
-
-        if ($users->count() === 1) {
-            $user = $users->first();
-        } else {
-            $filtered = $users->filter(function ($user) use ($role) {
-                if ($role === 'student') {
-                    return $user->role === 'student';
-                } elseif ($role === 'parent') {
-                    return $user->role === 'parent';
-                }
-                return true;
-            });
-
-            $user = $filtered->first() ?? $users->first();
-        }
+        $user = \App\Models\User::where('student_id', $idNumber)
+            ->orWhere('employee_id', $idNumber)
+            ->orWhere('parent_id', $idNumber)
+            ->first();
 
         if (!$user || !\Illuminate\Support\Facades\Hash::check($password, $user->password)) {
             RateLimiter::hit($this->throttleKey());

@@ -26,6 +26,7 @@ class User extends Authenticatable
         'password',
         'role',
         'student_id',
+        'parent_id',
         'grade_level',
         'section',
         'linked_student_id',

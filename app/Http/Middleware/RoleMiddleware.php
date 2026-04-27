@@ -12,19 +12,18 @@ class RoleMiddleware
     public function handle(Request $request, Closure $next, string $roles = ''): Response
     {
         if (!Auth::check()) {
-            return redirect()->route('login')->with('message', 'Please log in to access this page.');
+            return redirect()->route('login');
         }
-
-        $user = $request->user();
 
         if (empty($roles)) {
             return $next($request);
         }
 
+        $user = $request->user();
         $allowedRoles = array_map('trim', explode(',', $roles));
 
         if (!$user || !in_array($user->role, $allowedRoles)) {
-            return redirect()->route('dashboard')->with('error', 'You do not have permission to access this page.');
+            return redirect()->route('login');
         }
 
         return $next($request);
