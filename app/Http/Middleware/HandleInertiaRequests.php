@@ -56,6 +56,7 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $user,
                 'role' => $role,
+                'permissions' => $user ? $user->getAllPermissions()->values()->toArray() : [],
             ],
             'dashboardUrl' => $dashboardUrl,
         ]);
