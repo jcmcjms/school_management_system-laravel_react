@@ -1,7 +1,7 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { QRCodeSVG } from 'qrcode.react';
 import { ArrowLeft, CheckCircle, Clock, XCircle, Ban } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem, type Order } from '@/types';
@@ -43,6 +43,15 @@ export default function OrderShow() {
 
     const canCancel = order.status === 'pending' && order.payment_status !== 'paid';
     const currentStep = statusTimeline.indexOf(order.status);
+
+    // Auto-refresh order status every 30s for active orders
+    useEffect(() => {
+        if (['served', 'cancelled'].includes(order.status)) return;
+        const id = setInterval(() => {
+            router.reload({ only: ['order'] });
+        }, 30000);
+        return () => clearInterval(id);
+    }, [order.status]);
 
     const handleCancel = () => {
         setCancelling(true);

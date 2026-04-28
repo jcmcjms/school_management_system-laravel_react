@@ -237,3 +237,20 @@ export interface PaginatedData<T> {
     from: number | null;
     to: number | null;
 }
+
+export interface AppNotification {
+    id: string;
+    data: {
+        title: string;
+        message: string;
+        url: string;
+        icon: string;
+        type: string;
+        order_number?: string;
+        status?: string;
+        item_name?: string;
+    };
+    read_at: string | null;
+    created_at: string;
+    time_ago?: string;
+}

@@ -1,6 +1,6 @@
 import { Head, router, usePage } from '@inertiajs/react';
 import { Package, Check, Clock, AlertTriangle, QrCode, DollarSign } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
@@ -24,6 +24,14 @@ export default function StaffDashboard() {
     const [showPayment, setShowPayment] = useState<Order | null>(null);
     const [gcashRef, setGcashRef] = useState('');
     const [cashReceived, setCashReceived] = useState('');
+
+    // Auto-refresh dashboard every 30 seconds
+    useEffect(() => {
+        const id = setInterval(() => {
+            router.reload({ only: ['orders', 'preparingOrders', 'readyOrders', 'statusCounts', 'lowStockInventory'] });
+        }, 30000);
+        return () => clearInterval(id);
+    }, []);
 
     const updateStatus = (orderId: number, newStatus: string) => {
         router.patch(`/staff/orders/${orderId}/status`, { status: newStatus }, { preserveScroll: true });

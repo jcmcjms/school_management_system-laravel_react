@@ -8,8 +8,12 @@ use App\Models\OrderItem;
 use App\Models\Payment;
 use App\Models\Reservation;
 use App\Models\SalaryDeduction;
+use App\Models\User;
+use App\Notifications\NewOrderReceived;
+use App\Notifications\OrderCancelled;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Inertia\Inertia;
 
 class OrderController extends Controller
@@ -165,6 +169,11 @@ class OrderController extends Controller
                 ]);
             }
 
+            // Notify all staff about the new order
+            $order->load('user');
+            $staffUsers = User::where('role', 'staff')->get();
+            Notification::send($staffUsers, new NewOrderReceived($order));
+
             return redirect()->route('orders.show', $order->id)
                 ->with('success', 'Order placed successfully!');
         });
@@ -219,6 +228,10 @@ class OrderController extends Controller
                 'status' => 'cancelled',
                 'payment_status' => 'failed',
             ]);
+
+            // Notify staff about cancellation
+            $staffUsers = User::where('role', 'staff')->get();
+            Notification::send($staffUsers, new OrderCancelled($order));
 
             return back()->with('success', 'Order cancelled successfully. Stock has been restored.');
         });

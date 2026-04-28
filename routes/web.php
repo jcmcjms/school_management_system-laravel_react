@@ -14,6 +14,7 @@ use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\RevenueController;
 use App\Http\Controllers\RolePermissionController;
+use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => redirect()->route('login'))->name('home');
@@ -23,6 +24,14 @@ Route::get('/menu/{menuItem}', [MenuController::class, 'show'])->name('menu.show
 
 // Single smart dashboard entry-point: redirects each role to their specific dashboard.
 Route::middleware('auth')->get('dashboard', [RedirectController::class, 'index'])->name('dashboard');
+
+// ── Notifications ───────────────────────────────────────────────────
+Route::middleware('auth')->group(function () {
+    Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('api/notifications/poll', [NotificationController::class, 'poll'])->name('notifications.poll');
+    Route::patch('notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
+    Route::post('notifications/mark-all-read', [NotificationController::class, 'markAllRead'])->name('notifications.mark-all-read');
+});
 
 // ── Admin Dashboard (permission-gated) ──────────────────────────────
 Route::middleware(['auth', 'permission:view_admin_dashboard'])->group(function () {
@@ -130,3 +139,4 @@ Route::middleware(['auth', 'permission:view_own_orders'])->group(function () {
 
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';
+

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\InventoryItem;
+use App\Notifications\OrderStatusChanged;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -71,6 +72,12 @@ class StaffDashboardController extends Controller
 
         if ($request->status === 'served') {
             $order->markAsServed();
+        }
+
+        // Notify the customer about the status change
+        $order->load('user');
+        if ($order->user) {
+            $order->user->notify(new OrderStatusChanged($order, $request->status));
         }
 
         return back()->with('success', 'Order status updated');
