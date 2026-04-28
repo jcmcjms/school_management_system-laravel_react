@@ -3,6 +3,7 @@ import { Package, Check, Clock, AlertTriangle, QrCode, DollarSign } from 'lucide
 import { useState, useEffect } from 'react';
 
 import AppLayout from '@/layouts/app-layout';
+import { LiveClock } from '@/components/live-clock';
 import { type BreadcrumbItem } from '@/types';
 
 interface OrderItemMenuItem { id: number; name: string }
@@ -63,12 +64,14 @@ export default function StaffDashboard() {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Staff Dashboard - Kitchen" />
             <div className="flex flex-1 flex-col gap-6 p-6">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                     <div>
                         <h1 className="text-3xl font-bold tracking-tight">Kitchen Dashboard</h1>
                         <p className="text-muted-foreground">Manage orders and preparation</p>
                     </div>
                 </div>
+
+                <LiveClock />
 
                 {/* Status Cards */}
                 <div className="grid gap-4 md:grid-cols-4">

@@ -1,29 +1,40 @@
 import { useState, useEffect, useCallback } from 'react';
-import { type CartItem, type MenuItem } from '@/types';
+import { usePage } from '@inertiajs/react';
+import { type CartItem, type MenuItem, type SharedData } from '@/types';
 
-const CART_KEY = 'sms_cart';
+function getCartKey(userId?: number): string {
+    return userId ? `sms_cart_${userId}` : 'sms_cart_guest';
+}
 
-function loadCart(): CartItem[] {
+function loadCart(userId?: number): CartItem[] {
     if (typeof window === 'undefined') return [];
     try {
-        const stored = localStorage.getItem(CART_KEY);
+        const stored = localStorage.getItem(getCartKey(userId));
         return stored ? JSON.parse(stored) : [];
     } catch {
         return [];
     }
 }
 
-function saveCart(items: CartItem[]) {
+function saveCart(items: CartItem[], userId?: number) {
     if (typeof window === 'undefined') return;
-    localStorage.setItem(CART_KEY, JSON.stringify(items));
+    localStorage.setItem(getCartKey(userId), JSON.stringify(items));
 }
 
 export function useCart() {
-    const [items, setItems] = useState<CartItem[]>(loadCart);
+    const { auth } = usePage<SharedData>().props;
+    const userId = auth?.user?.id;
+
+    const [items, setItems] = useState<CartItem[]>(() => loadCart(userId));
+
+    // Re-load cart when user changes (login/logout)
+    useEffect(() => {
+        setItems(loadCart(userId));
+    }, [userId]);
 
     useEffect(() => {
-        saveCart(items);
-    }, [items]);
+        saveCart(items, userId);
+    }, [items, userId]);
 
     const addItem = useCallback((menuItem: MenuItem, quantity = 1) => {
         setItems((prev) => {

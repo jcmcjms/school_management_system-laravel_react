@@ -2,6 +2,7 @@ import { Head, Link, usePage } from '@inertiajs/react';
 import { ShoppingCart, Wallet, Clock, CalendarClock, ChefHat, CheckCircle } from 'lucide-react';
 
 import AppLayout from '@/layouts/app-layout';
+import { LiveClock } from '@/components/live-clock';
 import { type BreadcrumbItem } from '@/types';
 
 interface Stats {
@@ -91,6 +92,8 @@ export default function CustomerDashboard() {
                     <h1 className="text-3xl font-bold tracking-tight">My Dashboard</h1>
                     <p className="text-muted-foreground">View your orders and meal reservations</p>
                 </div>
+
+                <LiveClock />
 
                 {/* Stats Cards */}
                 <div className={`grid gap-4 ${isFaculty ? 'md:grid-cols-4' : 'md:grid-cols-3'}`}>

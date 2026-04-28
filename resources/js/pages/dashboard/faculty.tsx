@@ -2,6 +2,7 @@ import { Head, usePage } from '@inertiajs/react';
 import { CreditCard, DollarSign, ShoppingCart, Wallet } from 'lucide-react';
 
 import AppLayout from '@/layouts/app-layout';
+import { LiveClock } from '@/components/live-clock';
 import { type BreadcrumbItem } from '@/types';
 
 interface Stats {
@@ -73,6 +74,8 @@ export default function FacultyDashboard() {
                     <h1 className="text-3xl font-bold tracking-tight">Faculty Dashboard</h1>
                     <p className="text-muted-foreground">Manage your meal orders and salary deductions</p>
                 </div>
+
+                <LiveClock />
 
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                     <div className="rounded-lg border bg-card p-6 shadow-sm">

@@ -2,11 +2,10 @@ import { Head, usePage } from '@inertiajs/react';
 import { ChefHat, Package, Plus, ShoppingCart, Users } from 'lucide-react';
 
 import AppLayout from '@/layouts/app-layout';
+import { LiveClock } from '@/components/live-clock';
 import { type BreadcrumbItem } from '@/types';
 
-const formatDate = (): string => {
-    return new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-};
+
 
 interface Stats {
     todayOrders: number;
@@ -90,15 +89,14 @@ export default function AdminDashboard() {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Admin Dashboard" />
             <div className="flex flex-1 flex-col gap-6 p-6">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                     <div>
                         <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
                         <p className="text-muted-foreground">Manage your restaurant operations</p>
                     </div>
-                    <div className="text-right text-sm text-muted-foreground">
-                        {formatDate()}
-                    </div>
                 </div>
+
+                <LiveClock />
 
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                     <div className="rounded-lg border bg-card p-6 shadow-sm">
