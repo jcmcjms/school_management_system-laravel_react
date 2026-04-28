@@ -54,6 +54,9 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                             onChange={(e) => setData('id_number', e.target.value)}
                             placeholder="Enter your ID number"
                         />
+                        <p className="text-xs text-muted-foreground">
+                            Student ID (STU001), Parent ID (PAR001), or Employee ID (EMP001)
+                        </p>
                         <InputError message={errors.id_number} />
                     </div>
 

@@ -72,7 +72,8 @@ class UserSeeder extends Seeder
             'email' => 'parent@example.com',
             'password' => Hash::make('password'),
             'role' => 'parent',
-            'student_id' => 'STU001',
+            'parent_id' => 'PAR001',
+            'linked_student_id' => User::where('student_id', 'STU001')->first()?->id,
             'is_active' => true,
         ]);
     }

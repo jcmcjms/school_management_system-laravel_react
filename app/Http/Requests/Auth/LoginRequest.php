@@ -46,9 +46,10 @@ class LoginRequest extends FormRequest
 
         $user = \App\Models\User::where('student_id', $idNumber)
             ->orWhere('employee_id', $idNumber)
+            ->orWhere('parent_id', $idNumber)
             ->first();
 
-        if (! $user || ! \Illuminate\Support\Facades\Hash::check($password, $user->password)) {
+        if (!$user || !\Illuminate\Support\Facades\Hash::check($password, $user->password)) {
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([

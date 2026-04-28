@@ -1,34 +1,57 @@
-import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
-import { type NavItem } from '@/types';
-import { Link } from '@inertiajs/react';
-import { BookOpen, Folder, LayoutGrid } from 'lucide-react';
+import { type NavItem, type SharedData } from '@/types';
+import { Link, usePage } from '@inertiajs/react';
+import { BookOpen, ChefHat, ClipboardList, Folder, LayoutGrid, Package, ShoppingCart, Users, Wallet, UtensilsCrossed } from 'lucide-react';
 import AppLogo from './app-logo';
 
-const mainNavItems: NavItem[] = [
-    {
-        title: 'Dashboard',
-        url: '/dashboard',
-        icon: LayoutGrid,
-    },
-];
+function getNavItems(role: string): NavItem[] {
+    const common: NavItem[] = [
+        { title: 'Dashboard', url: '/dashboard', icon: LayoutGrid },
+    ];
 
-const footerNavItems: NavItem[] = [
-    {
-        title: 'Repository',
-        url: 'https://github.com/laravel/react-starter-kit',
-        icon: Folder,
-    },
-    {
-        title: 'Documentation',
-        url: 'https://laravel.com/docs/starter-kits',
-        icon: BookOpen,
-    },
-];
+    switch (role) {
+        case 'admin':
+        case 'manager':
+            return [
+                ...common,
+                { title: 'Menu Management', url: '/admin/menu', icon: UtensilsCrossed },
+                { title: 'Users', url: '/admin/users', icon: Users },
+                { title: 'Inventory', url: '/admin/inventory', icon: Package },
+                { title: 'Revenue', url: '/admin/revenue', icon: Wallet },
+                { title: 'Browse Menu', url: '/menu', icon: ChefHat },
+            ];
+        case 'staff':
+            return [
+                ...common,
+                { title: 'Browse Menu', url: '/menu', icon: ChefHat },
+            ];
+        case 'faculty':
+            return [
+                ...common,
+                { title: 'Browse Menu', url: '/menu', icon: ChefHat },
+                { title: 'My Orders', url: '/orders', icon: ShoppingCart },
+                { title: 'Reservations', url: '/reservations', icon: ClipboardList },
+            ];
+        case 'student':
+        case 'parent':
+            return [
+                ...common,
+                { title: 'Browse Menu', url: '/menu', icon: ChefHat },
+                { title: 'My Orders', url: '/orders', icon: ShoppingCart },
+                { title: 'Reservations', url: '/reservations', icon: ClipboardList },
+            ];
+        default:
+            return common;
+    }
+}
 
 export function AppSidebar() {
+    const { auth } = usePage<SharedData>().props;
+    const role = (auth?.user as any)?.role || 'student';
+    const navItems = getNavItems(role);
+
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>
@@ -44,11 +67,10 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                <NavMain items={mainNavItems} />
+                <NavMain items={navItems} />
             </SidebarContent>
 
             <SidebarFooter>
-                <NavFooter items={footerNavItems} className="mt-auto" />
                 <NavUser />
             </SidebarFooter>
         </Sidebar>

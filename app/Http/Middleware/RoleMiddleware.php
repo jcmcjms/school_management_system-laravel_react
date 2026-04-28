@@ -2,7 +2,6 @@
 
 namespace App\Http\Middleware;
 
-use App\Models\User;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -13,17 +12,19 @@ class RoleMiddleware
     public function handle(Request $request, Closure $next, string ...$roles): Response
     {
         if (!Auth::check()) {
-            return redirect()->route('login')->with('message', 'Please log in to access this page.');
+            return redirect()->route('login');
         }
-
-        $user = $request->user();
 
         if (empty($roles)) {
             return $next($request);
         }
 
+        $user = $request->user();
+
         if (!$user || !in_array($user->role, $roles)) {
-            abort(Response::HTTP_FORBIDDEN, 'You do not have permission to access this page.');
+            // Don't redirect back to login for authenticated users — that creates a redirect loop.
+            // Instead send them to /dashboard which RedirectController routes to their own dashboard.
+            return redirect()->route('dashboard');
         }
 
         return $next($request);
