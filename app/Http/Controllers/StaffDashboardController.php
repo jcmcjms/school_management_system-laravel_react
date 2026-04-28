@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\InventoryItem;
+use App\Models\Payment;
 use App\Notifications\OrderStatusChanged;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -92,6 +93,23 @@ class StaffDashboardController extends Controller
 
         if ($newStatus === 'served') {
             $order->markAsServed();
+
+            // Auto-confirm payment when served (cash collected at counter, gcash verified)
+            if ($order->payment_status !== 'paid') {
+                // Create a payment record if one doesn't exist
+                if (!$order->payment && in_array($order->payment_method, ['cash', 'gcash'])) {
+                    Payment::create([
+                        'order_id' => $order->id,
+                        'user_id' => $order->user_id,
+                        'amount' => $order->total,
+                        'payment_method' => $order->payment_method,
+                        'status' => 'completed',
+                        'completed_at' => now(),
+                        'notes' => 'Auto-confirmed on serve',
+                    ]);
+                }
+                $order->markAsPaid();
+            }
         }
 
         // Notify the customer about the status change

@@ -58,7 +58,7 @@ export default function MenuIndex() {
 
                 {/* Floating Cart Panel */}
                 {showCart && itemCount > 0 && (
-                    <div className="fixed right-4 top-20 z-50 w-80 rounded-lg border bg-card p-4 shadow-xl">
+                    <div className="fixed inset-x-2 top-16 z-50 mx-auto max-w-sm rounded-lg border bg-card p-4 shadow-xl sm:inset-x-auto sm:right-4 sm:left-auto sm:top-20 sm:w-80">
                         <div className="flex items-center justify-between mb-3">
                             <h3 className="font-semibold">Your Cart ({itemCount})</h3>
                             <button onClick={() => setShowCart(false)} className="rounded p-1 hover:bg-accent"><X className="h-4 w-4" /></button>

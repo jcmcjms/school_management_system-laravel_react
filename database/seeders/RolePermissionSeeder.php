@@ -76,6 +76,7 @@ class RolePermissionSeeder extends Seeder
             $manageDeductions->id,
             $placeOrder->id,
             $viewOwnOrders->id,
+            $useSalaryDeduction->id,
             $browseMenu->id,
         ]);
 
@@ -86,6 +87,11 @@ class RolePermissionSeeder extends Seeder
             $confirmPayment->id,
             $redeemReservation->id,
             $addStock->id,
+            $manageMenu->id,
+            $manageCategories->id,
+            $placeOrder->id,
+            $viewOwnOrders->id,
+            $useSalaryDeduction->id,
             $browseMenu->id,
         ]);
 

@@ -7,7 +7,7 @@ import { LiveClock } from '@/components/live-clock';
 import { type BreadcrumbItem } from '@/types';
 
 interface OrderItemMenuItem { id: number; name: string }
-interface OrderItem { id: number; quantity: number; unit_price: number; subtotal: number; menuItem: OrderItemMenuItem }
+interface OrderItem { id: number; quantity: number; unit_price: number; subtotal: number; menu_item: OrderItemMenuItem }
 interface OrderUser { id: number; name: string }
 interface PaymentInfo { id: number; status: string; payment_method: string }
 interface Order {
@@ -110,7 +110,7 @@ export default function StaffDashboard() {
                 <LiveClock />
 
                 {/* Status Cards */}
-                <div className="grid gap-4 md:grid-cols-5">
+                <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-5">
                     <div className="rounded-lg border border-yellow-500 bg-yellow-50 p-4 shadow-sm dark:bg-yellow-950">
                         <div className="flex items-center justify-between">
                             <div><p className="text-xs font-medium text-yellow-700 dark:text-yellow-300">New Orders</p><p className="text-2xl font-bold text-yellow-700 dark:text-yellow-300">{statusCounts.pending}</p></div>
@@ -184,7 +184,7 @@ export default function StaffDashboard() {
                                                         </div>
                                                     </div>
                                                     <p className="mb-2 text-sm text-muted-foreground">
-                                                        {order.items?.map((item) => `${item.quantity}x ${item.menuItem?.name}`).join(', ')}
+                                                        {order.items?.map((item) => `${item.quantity}x ${item.menu_item?.name}`).join(', ')}
                                                     </p>
                                                     <div className="flex gap-2">
                                                         <button onClick={() => updateStatus(order.id, 'preparing')}
@@ -225,7 +225,7 @@ export default function StaffDashboard() {
                                                         <p className="font-medium">₱{formatPrice(order.total)}</p>
                                                     </div>
                                                     <p className="mb-2 text-sm text-muted-foreground">
-                                                        {order.items?.map((item) => `${item.quantity}x ${item.menuItem?.name}`).join(', ')}
+                                                        {order.items?.map((item) => `${item.quantity}x ${item.menu_item?.name}`).join(', ')}
                                                     </p>
                                                     <div className="flex gap-2">
                                                         <button onClick={() => updateStatus(order.id, 'ready')}
@@ -326,7 +326,7 @@ export default function StaffDashboard() {
                                                 <td className="px-4 py-3 font-medium">{order.order_number}</td>
                                                 <td className="px-4 py-3">{order.user?.name}</td>
                                                 <td className="px-4 py-3 text-muted-foreground">
-                                                    {order.items?.map((i) => `${i.quantity}x ${i.menuItem?.name}`).join(', ')}
+                                                    {order.items?.map((i) => `${i.quantity}x ${i.menu_item?.name}`).join(', ')}
                                                 </td>
                                                 <td className="px-4 py-3 font-medium">₱{formatPrice(order.total)}</td>
                                                 <td className="px-4 py-3">

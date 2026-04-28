@@ -33,12 +33,16 @@ export default function CreateOrder() {
     const [processing, setProcessing] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
 
-    const canUseSalaryDeduction = userRole === 'faculty' && deductionInfo;
+    const canUseSalaryDeduction = !!deductionInfo && deductionInfo.limit > 0;
     const deductionInsufficient = canUseSalaryDeduction && deductionInfo && total > deductionInfo.remaining;
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (items.length === 0) return;
+        if (!pickupTime) {
+            setErrors({ pickup_time: 'Please select a pickup time before placing your order.' });
+            return;
+        }
 
         setProcessing(true);
         router.post('/orders', {
@@ -148,10 +152,14 @@ export default function CreateOrder() {
                             </div>
 
                             <div className="rounded-lg border bg-card p-6 shadow-sm">
-                                <h2 className="mb-4 text-xl font-semibold">Pickup Time</h2>
-                                <input type="time" value={pickupTime} onChange={(e) => setPickupTime(e.target.value)}
-                                    className="w-full rounded-md border bg-background px-3 py-2 text-sm" />
-                                <p className="mt-1 text-xs text-muted-foreground">Optional — select a preferred pickup time</p>
+                                <h2 className="mb-4 text-xl font-semibold">Pickup Time <span className="text-red-500">*</span></h2>
+                                <input type="time" value={pickupTime} onChange={(e) => { setPickupTime(e.target.value); setErrors((prev) => { const { pickup_time, ...rest } = prev; return rest; }); }}
+                                    className={`w-full rounded-md border bg-background px-3 py-2 text-sm ${errors.pickup_time ? 'border-red-500' : ''}`} />
+                                {errors.pickup_time ? (
+                                    <p className="mt-1 text-xs text-red-600">{errors.pickup_time}</p>
+                                ) : (
+                                    <p className="mt-1 text-xs text-muted-foreground">Required — select when you'd like to pick up your order</p>
+                                )}
                             </div>
 
                             <div className="rounded-lg border bg-card p-6 shadow-sm">
@@ -160,7 +168,7 @@ export default function CreateOrder() {
                                     className="w-full rounded-md border bg-background px-3 py-2 text-sm" />
                             </div>
 
-                            <button type="submit" disabled={processing || (paymentMethod === 'salary_deduction' && !!deductionInsufficient)}
+                            <button type="submit" disabled={processing || !pickupTime || (paymentMethod === 'salary_deduction' && !!deductionInsufficient)}
                                 className="w-full rounded-md bg-primary py-3 text-lg font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50">
                                 {processing ? 'Processing...' : `Place Order — ₱${formatPrice(total)}`}
                             </button>

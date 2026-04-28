@@ -28,16 +28,22 @@ class RevenueController extends Controller
             ->where('payment_status', 'paid')
             ->orderBy('created_at', 'desc')->limit(20)->get();
 
-        // Faculty near deduction limits
-        $facultyUsers = User::where('role', 'faculty')
+        // Employees near deduction limits
+        $employeeUsers = User::whereIn('role', ['manager', 'staff', 'faculty'])
             ->where('is_active', true)
+            ->where('salary_deduction_limit', '>', 0)
             ->get()->map(function ($user) {
+                $thisMonth = now()->month;
+                $thisYear = now()->year;
                 $limit = (float) $user->salary_deduction_limit;
-                $current = (float) $user->salary_deduction_current;
-                $remaining = $limit - $current;
+                $current = (float) SalaryDeduction::where('user_id', $user->id)
+                    ->where('payroll_month', sprintf('%02d', $thisMonth))
+                    ->where('payroll_year', $thisYear)
+                    ->sum('amount');
+                $remaining = max(0, $limit - $current);
                 $percentage = $limit > 0 ? ($current / $limit) * 100 : 0;
                 return [
-                    'id' => $user->id, 'name' => $user->name,
+                    'id' => $user->id, 'name' => $user->name, 'role' => $user->role,
                     'employee_id' => $user->employee_id, 'department' => $user->department,
                     'limit' => $limit, 'used' => $current,
                     'remaining' => $remaining, 'percentage' => round($percentage, 1),
@@ -52,7 +58,7 @@ class RevenueController extends Controller
                 'order_count' => $orders->count(),
             ],
             'recentOrders' => $recentOrders,
-            'facultyDeductions' => $facultyUsers,
+            'employeeDeductions' => $employeeUsers,
             'filters' => [
                 'start_date' => $startDate->toDateString(),
                 'end_date' => $endDate->toDateString(),

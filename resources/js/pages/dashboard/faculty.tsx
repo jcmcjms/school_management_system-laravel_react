@@ -15,7 +15,7 @@ interface Stats {
 }
 
 interface OrderItemMenuItem { id: number; name: string }
-interface OrderItem { id: number; quantity: number; unit_price: number; subtotal: number; menuItem: OrderItemMenuItem }
+interface OrderItem { id: number; quantity: number; unit_price: number; subtotal: number; menu_item: OrderItemMenuItem }
 
 interface Order {
     id: number;
@@ -248,7 +248,7 @@ export default function FacultyDashboard() {
                                                 </Link>
                                             </td>
                                             <td className="py-3 text-muted-foreground">
-                                                {order.items.map(i => i.menuItem.name).join(', ')}
+                                                {order.items.map(i => i.menu_item.name).join(', ')}
                                             </td>
                                             <td className="py-3 font-medium">₱{formatPrice(order.total)}</td>
                                             <td className="py-3">

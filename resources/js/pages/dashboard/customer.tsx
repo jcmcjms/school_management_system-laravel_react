@@ -24,7 +24,7 @@ interface OrderItem {
     quantity: number;
     unit_price: number;
     subtotal: number;
-    menuItem: OrderItemMenuItem;
+    menu_item: OrderItemMenuItem;
 }
 
 interface Order {
@@ -229,7 +229,7 @@ export default function CustomerDashboard() {
                                     <div>
                                         <p className="font-medium">{order.order_number}</p>
                                         <p className="text-sm text-muted-foreground">
-                                            {order.items?.map((item) => `${item.quantity}x ${item.menuItem?.name}`).join(', ')}
+                                            {order.items?.map((item) => `${item.quantity}x ${item.menu_item?.name}`).join(', ')}
                                         </p>
                                         <p className="text-xs text-muted-foreground">{formatDate(order.created_at)}</p>
                                     </div>

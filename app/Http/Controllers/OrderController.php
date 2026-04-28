@@ -37,7 +37,7 @@ class OrderController extends Controller
         $user = $request->user();
 
         $deductionInfo = null;
-        if ($user->isFaculty()) {
+        if ($user->isEmployee() && $user->salary_deduction_limit > 0) {
             $thisMonth = now()->month;
             $thisYear = now()->year;
             $monthlyUsed = SalaryDeduction::where('user_id', $user->id)
@@ -66,7 +66,7 @@ class OrderController extends Controller
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.special_instructions' => 'nullable|string|max:255',
             'payment_method' => 'required|in:gcash,cash,salary_deduction',
-            'pickup_time' => 'nullable|date_format:H:i',
+            'pickup_time' => 'required|date_format:H:i',
             'notes' => 'nullable|string|max:500',
         ]);
 
@@ -74,8 +74,8 @@ class OrderController extends Controller
 
         // Validate faculty salary deduction limit
         if ($request->payment_method === 'salary_deduction') {
-            if (!$user->isFaculty()) {
-                return back()->withErrors(['payment_method' => 'Salary deduction is only available for faculty members.']);
+            if (!$user->isEmployee() || $user->salary_deduction_limit <= 0) {
+                return back()->withErrors(['payment_method' => 'Salary deduction is not available for your account.']);
             }
         }
 

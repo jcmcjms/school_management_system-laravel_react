@@ -16,6 +16,7 @@ use App\Http\Controllers\RevenueController;
 use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ChatController;
+use App\Http\Controllers\SalaryDeductionController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => redirect()->route('login'))->name('home');
@@ -108,6 +109,13 @@ Route::middleware(['auth', 'permission:export_revenue'])->group(function () {
 Route::middleware(['auth', 'permission:manage_roles'])->group(function () {
     Route::get('admin/roles', [RolePermissionController::class, 'index'])->name('admin.roles.index');
     Route::put('admin/roles/{role}/permissions', [RolePermissionController::class, 'updatePermissions'])->name('admin.roles.update-permissions');
+});
+
+// ── Salary Deduction Monitoring ─────────────────────────────────────
+Route::middleware(['auth', 'permission:manage_deduction_limits'])->group(function () {
+    Route::get('admin/salary-deductions', [SalaryDeductionController::class, 'index'])->name('admin.salary-deductions.index');
+    Route::get('admin/salary-deductions/{user}', [SalaryDeductionController::class, 'show'])->name('admin.salary-deductions.show');
+    Route::patch('admin/salary-deductions/{user}/limit', [SalaryDeductionController::class, 'updateLimit'])->name('admin.salary-deductions.update-limit');
 });
 
 // ── Staff / Kitchen Routes ──────────────────────────────────────────

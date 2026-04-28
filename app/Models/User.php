@@ -102,6 +102,11 @@ class User extends Authenticatable
         return $this->role === 'faculty';
     }
 
+    public function isEmployee(): bool
+    {
+        return in_array($this->role, ['admin', 'manager', 'staff', 'faculty']);
+    }
+
     public function canAccessAdmin(): bool
     {
         return in_array($this->role, ['admin', 'manager']);
@@ -149,6 +154,6 @@ class User extends Authenticatable
 
     public function canDeductSalary(float $amount): bool
     {
-        return $this->isFaculty() && $this->getRemainingDeductionLimit() >= $amount;
+        return $this->isEmployee() && $this->salary_deduction_limit > 0 && $this->getRemainingDeductionLimit() >= $amount;
     }
 }

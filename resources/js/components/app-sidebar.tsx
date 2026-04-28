@@ -3,7 +3,7 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem, type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { ChefHat, ClipboardList, LayoutGrid, Package, Shield, ShoppingCart, Users, UtensilsCrossed, Wallet, Bell, MessageCircle } from 'lucide-react';
+import { ChefHat, ClipboardList, LayoutGrid, Package, Shield, ShoppingCart, Users, UtensilsCrossed, Wallet, Bell, MessageCircle, Grid3X3, CreditCard } from 'lucide-react';
 import AppLogo from './app-logo';
 
 function getNavItems(role: string, permissions: string[]): NavItem[] {
@@ -17,6 +17,9 @@ function getNavItems(role: string, permissions: string[]): NavItem[] {
     if (has('manage_menu')) {
         items.push({ title: 'Menu Management', url: '/admin/menu', icon: UtensilsCrossed });
     }
+    if (has('manage_categories')) {
+        items.push({ title: 'Categories', url: '/admin/categories', icon: Grid3X3 });
+    }
     if (has('manage_users')) {
         items.push({ title: 'Users', url: '/admin/users', icon: Users });
     }
@@ -25,6 +28,9 @@ function getNavItems(role: string, permissions: string[]): NavItem[] {
     }
     if (has('view_revenue')) {
         items.push({ title: 'Revenue', url: '/admin/revenue', icon: Wallet });
+    }
+    if (has('manage_deduction_limits')) {
+        items.push({ title: 'Salary Deductions', url: '/admin/salary-deductions', icon: CreditCard });
     }
     if (has('manage_roles')) {
         items.push({ title: 'Roles & Permissions', url: '/admin/roles', icon: Shield });
