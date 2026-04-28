@@ -18,10 +18,10 @@ class RedirectController extends Controller
 
         return match ($user->role) {
             'admin', 'manager' => redirect()->route('admin.dashboard'),
-            'staff' => redirect()->route('staff.dashboard'),
+            'staff'            => redirect()->route('staff.dashboard'),
             'student', 'parent' => redirect()->route('customer.dashboard'),
-            'faculty' => redirect()->route('faculty.dashboard'),
-            default => redirect()->route('menu'),
+            'faculty'          => redirect()->route('faculty.dashboard'),
+            default            => redirect()->route('menu'),
         };
     }
 }
