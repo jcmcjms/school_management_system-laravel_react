@@ -1,6 +1,6 @@
 import { Head, router, usePage } from '@inertiajs/react';
-import { ArrowLeft, Plus, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { ArrowLeft, Plus, Trash2, Upload, Camera } from 'lucide-react';
+import { useState, useRef } from 'react';
 
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem, type MenuItem, type MenuCategory, type InventoryItem } from '@/types';
@@ -27,13 +27,16 @@ export default function AdminMenuForm() {
         category_id: menuItem?.category_id?.toString() || '',
         description: menuItem?.description || '',
         price: menuItem?.price?.toString() || '',
-        image_url: menuItem?.image_url || '',
         available_quantity: menuItem?.available_quantity?.toString() || '0',
         low_stock_threshold: menuItem?.low_stock_threshold?.toString() || '5',
         is_available: menuItem?.is_available ?? true,
         is_featured: menuItem?.is_featured ?? false,
         allergens: (menuItem?.allergens || []).join(', '),
     });
+
+    const [imageFile, setImageFile] = useState<File | null>(null);
+    const [imagePreview, setImagePreview] = useState<string | null>(menuItem?.image_url || null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const [ingredients, setIngredients] = useState<IngredientRow[]>(
         menuItem?.ingredients?.map((i) => ({
@@ -61,27 +64,67 @@ export default function AdminMenuForm() {
         setIngredients((prev) => prev.map((item, i) => i === idx ? { ...item, [key]: value } : item));
     };
 
+    const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setImageFile(file);
+            const reader = new FileReader();
+            reader.onload = (ev) => setImagePreview(ev.target?.result as string);
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const removeImage = () => {
+        setImageFile(null);
+        setImagePreview(null);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+    };
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         setProcessing(true);
 
-        const data = {
-            ...form,
-            category_id: parseInt(form.category_id),
-            price: parseFloat(form.price),
-            available_quantity: parseInt(form.available_quantity),
-            low_stock_threshold: parseInt(form.low_stock_threshold),
-            allergens: form.allergens ? form.allergens.split(',').map((a) => a.trim()).filter(Boolean) : [],
-            ingredients: ingredients.filter((i) => i.ingredient_name),
-        };
+        const formData = new FormData();
+        formData.append('name', form.name);
+        formData.append('category_id', form.category_id);
+        formData.append('description', form.description);
+        formData.append('price', form.price);
+        formData.append('available_quantity', form.available_quantity);
+        formData.append('low_stock_threshold', form.low_stock_threshold);
+        formData.append('is_available', form.is_available ? '1' : '0');
+        formData.append('is_featured', form.is_featured ? '1' : '0');
 
-        const url = isEditing ? `/admin/menu/${menuItem!.id}` : '/admin/menu';
-        const method = isEditing ? 'put' : 'post';
+        if (form.allergens) {
+            form.allergens.split(',').map(a => a.trim()).filter(Boolean).forEach((a, i) => {
+                formData.append(`allergens[${i}]`, a);
+            });
+        }
 
-        router[method](url, data as any, {
-            onError: (errs) => { setErrors(errs as Record<string, string>); setProcessing(false); },
-            onFinish: () => setProcessing(false),
+        ingredients.filter(i => i.ingredient_name).forEach((ing, i) => {
+            if (ing.inventory_item_id) formData.append(`ingredients[${i}][inventory_item_id]`, String(ing.inventory_item_id));
+            formData.append(`ingredients[${i}][ingredient_name]`, ing.ingredient_name);
+            formData.append(`ingredients[${i}][quantity_required]`, String(ing.quantity_required));
+            formData.append(`ingredients[${i}][unit]`, ing.unit);
         });
+
+        if (imageFile) {
+            formData.append('image', imageFile);
+        }
+
+        if (isEditing) {
+            formData.append('_method', 'PUT');
+            router.post(`/admin/menu/${menuItem!.id}`, formData, {
+                forceFormData: true,
+                onError: (errs) => { setErrors(errs as Record<string, string>); setProcessing(false); },
+                onFinish: () => setProcessing(false),
+            });
+        } else {
+            router.post('/admin/menu', formData, {
+                forceFormData: true,
+                onError: (errs) => { setErrors(errs as Record<string, string>); setProcessing(false); },
+                onFinish: () => setProcessing(false),
+            });
+        }
     };
 
     const inputCls = "w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary";
@@ -121,19 +164,36 @@ export default function AdminMenuForm() {
                                     <input type="number" step="0.01" min="0" value={form.price} onChange={(e) => updateField('price', e.target.value)} className={inputCls} required />
                                 </div>
                                 <div>
-                                    <label className="mb-1 block text-sm font-medium">Image URL</label>
-                                    <input value={form.image_url} onChange={(e) => updateField('image_url', e.target.value)} className={inputCls} placeholder="https://..." />
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
                                     <label className="mb-1 block text-sm font-medium">Stock Qty *</label>
                                     <input type="number" min="0" value={form.available_quantity} onChange={(e) => updateField('available_quantity', e.target.value)} className={inputCls} />
                                 </div>
-                                <div>
-                                    <label className="mb-1 block text-sm font-medium">Low Stock Threshold</label>
-                                    <input type="number" min="0" value={form.low_stock_threshold} onChange={(e) => updateField('low_stock_threshold', e.target.value)} className={inputCls} />
-                                </div>
+                            </div>
+                            <div>
+                                <label className="mb-1 block text-sm font-medium">Item Image</label>
+                                <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" onChange={handleImageSelect}
+                                    className="hidden" id="menu-image-upload" />
+                                {imagePreview ? (
+                                    <div className="relative mt-1 inline-block">
+                                        <img src={imagePreview} alt="Preview" className="h-32 w-32 rounded-lg border object-cover" />
+                                        <button type="button" onClick={removeImage}
+                                            className="absolute -right-2 -top-2 rounded-full bg-red-500 p-1 text-white shadow hover:bg-red-600">
+                                            <Trash2 className="h-3 w-3" />
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="mt-1 flex gap-2">
+                                        <button type="button" onClick={() => fileInputRef.current?.click()}
+                                            className="flex items-center gap-2 rounded-md border border-dashed px-4 py-3 text-sm text-muted-foreground hover:bg-accent">
+                                            <Upload className="h-4 w-4" /> Upload Photo
+                                        </button>
+                                    </div>
+                                )}
+                                {errors.image && <p className="mt-1 text-xs text-red-600">{errors.image}</p>}
+                                <p className="mt-1 text-xs text-muted-foreground">JPG, PNG, or WebP — max 5MB. On mobile, you can use your camera.</p>
+                            </div>
+                            <div>
+                                <label className="mb-1 block text-sm font-medium">Low Stock Threshold</label>
+                                <input type="number" min="0" value={form.low_stock_threshold} onChange={(e) => updateField('low_stock_threshold', e.target.value)} className={inputCls} />
                             </div>
                             <div>
                                 <label className="mb-1 block text-sm font-medium">Allergens</label>

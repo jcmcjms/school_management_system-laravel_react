@@ -30,7 +30,7 @@ export default function AdminMenuIndex() {
     };
 
     const handleDelete = (item: MenuItem) => {
-        if (confirm(`Delete "${item.name}"?`)) {
+        if (confirm(`Delete "${item.name ?? 'Untitled'}"?`)) {
             router.delete(`/admin/menu/${item.id}`);
         }
     };
@@ -90,12 +90,12 @@ export default function AdminMenuIndex() {
                                         <div className="flex items-center gap-3">
                                             {item.image_url && <img src={item.image_url} alt="" className="h-10 w-10 rounded object-cover" />}
                                             <div>
-                                                <p className="font-medium">{item.name}</p>
+                                                <p className="font-medium">{item.name ?? 'Untitled'}</p>
                                                 {item.is_featured && <span className="text-xs text-primary">Featured</span>}
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-4 py-3 text-muted-foreground">{item.category?.name}</td>
+                                    <td className="px-4 py-3 text-muted-foreground">{item.category?.name ?? '—'}</td>
                                     <td className="px-4 py-3 text-right font-medium">₱{formatPrice(item.price)}</td>
                                     <td className="px-4 py-3 text-right">{item.available_quantity}</td>
                                     <td className="px-4 py-3 text-center">

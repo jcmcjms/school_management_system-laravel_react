@@ -9,9 +9,9 @@ export default function AppLogoIcon(props: SVGAttributes<SVGElement>) {
                 y="50%"
                 textAnchor="middle"
                 dominantBaseline="central"
-                font-family="sans-serif"
-                font-weight="bold"
-                font-size="18"
+                fontFamily="sans-serif"
+                fontWeight="bold"
+                fontSize="18"
                 fill="white"
                 letterSpacing="2"
             >

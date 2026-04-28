@@ -7,6 +7,7 @@ use App\Models\MenuItem;
 use App\Models\MenuItemIngredient;
 use App\Models\InventoryItem;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 
@@ -52,7 +53,7 @@ class AdminMenuController extends Controller
             'category_id' => 'required|exists:menu_categories,id',
             'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
-            'image_url' => 'nullable|url|max:500',
+            'image' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:5120',
             'available_quantity' => 'required|integer|min:0',
             'low_stock_threshold' => 'integer|min:0',
             'allergens' => 'nullable|array',
@@ -69,13 +70,18 @@ class AdminMenuController extends Controller
             'ingredients.*.unit' => 'required|string|max:50',
         ]);
 
+        $imageUrl = null;
+        if ($request->hasFile('image')) {
+            $imageUrl = '/storage/' . $request->file('image')->store('menu-items', 'public');
+        }
+
         $menuItem = MenuItem::create([
             'name' => $validated['name'],
             'slug' => Str::slug($validated['name']) . '-' . Str::random(4),
             'category_id' => $validated['category_id'],
             'description' => $validated['description'] ?? null,
             'price' => $validated['price'],
-            'image_url' => $validated['image_url'] ?? null,
+            'image_url' => $imageUrl,
             'available_quantity' => $validated['available_quantity'],
             'low_stock_threshold' => $validated['low_stock_threshold'] ?? 5,
             'allergens' => $validated['allergens'] ?? null,
@@ -125,7 +131,7 @@ class AdminMenuController extends Controller
             'category_id' => 'required|exists:menu_categories,id',
             'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
-            'image_url' => 'nullable|url|max:500',
+            'image' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:5120',
             'available_quantity' => 'required|integer|min:0',
             'low_stock_threshold' => 'integer|min:0',
             'allergens' => 'nullable|array',
@@ -142,12 +148,11 @@ class AdminMenuController extends Controller
             'ingredients.*.unit' => 'required|string|max:50',
         ]);
 
-        $menuItem->update([
+        $updateData = [
             'name' => $validated['name'],
             'category_id' => $validated['category_id'],
             'description' => $validated['description'] ?? null,
             'price' => $validated['price'],
-            'image_url' => $validated['image_url'] ?? null,
             'available_quantity' => $validated['available_quantity'],
             'low_stock_threshold' => $validated['low_stock_threshold'] ?? 5,
             'allergens' => $validated['allergens'] ?? null,
@@ -156,7 +161,17 @@ class AdminMenuController extends Controller
             'daily_end_time' => $validated['daily_end_time'] ?? null,
             'is_available' => $validated['is_available'] ?? true,
             'is_featured' => $validated['is_featured'] ?? false,
-        ]);
+        ];
+
+        if ($request->hasFile('image')) {
+            // Delete old image if it was uploaded (not external URL)
+            if ($menuItem->image_url && str_starts_with($menuItem->image_url, '/storage/')) {
+                Storage::disk('public')->delete(str_replace('/storage/', '', $menuItem->image_url));
+            }
+            $updateData['image_url'] = '/storage/' . $request->file('image')->store('menu-items', 'public');
+        }
+
+        $menuItem->update($updateData);
 
         $menuItem->updateAvailabilityStatus();
 

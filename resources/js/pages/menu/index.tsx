@@ -161,7 +161,7 @@ export default function MenuIndex() {
                 <DialogContent className="max-w-2xl">
                     <DialogHeader>
                         <DialogTitle className="text-2xl">{selectedItem?.name}</DialogTitle>
-                        <DialogDescription className="text-base">{selectedItem?.category.name}</DialogDescription>
+                        <DialogDescription className="text-base">{selectedItem?.category?.name}</DialogDescription>
                     </DialogHeader>
                     {selectedItem?.image_url && (
                         <div className="mb-4 aspect-video w-full overflow-hidden rounded-lg">

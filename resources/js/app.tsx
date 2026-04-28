@@ -14,40 +14,45 @@ declare global {
 
 const appName = import.meta.env.VITE_APP_NAME || 'SMS';
 
+// Loading wrapper component for first-time visits
+function AppWithLoading({ App, props }: { App: React.FC<any>; props: any }) {
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        // Check if this is a first-time visit (no session storage marker)
+        if (!sessionStorage.getItem('smsAppLoaded')) {
+            // Simulate loading for visual effect on first visit
+            const timer = setTimeout(() => {
+                setIsLoading(false);
+                sessionStorage.setItem('smsAppLoaded', 'true');
+            }, 1500);
+            return () => clearTimeout(timer);
+        } else {
+            setIsLoading(false);
+        }
+    }, []);
+
+    return (
+        <>
+            {isLoading && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-background">
+                    <div className="flex flex-col items-center gap-4">
+                        <LoaderCircle className="h-12 w-12 animate-spin text-primary" />
+                        <p className="text-sm font-medium text-muted-foreground">Loading SMS...</p>
+                    </div>
+                </div>
+            )}
+            <App {...props} />
+        </>
+    );
+}
+
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,
     resolve: (name) => resolvePageComponent(`./pages/${name}.tsx`, import.meta.glob('./pages/**/*.tsx')),
     setup({ el, App, props }) {
         const root = createRoot(el);
-        const [isLoading, setIsLoading] = useState(true);
-
-        useEffect(() => {
-            // Check if this is a first-time visit (no session storage marker)
-            if (!sessionStorage.getItem('smsAppLoaded')) {
-                // Simulate loading for visual effect on first visit
-                const timer = setTimeout(() => {
-                    setIsLoading(false);
-                    sessionStorage.setItem('smsAppLoaded', 'true');
-                }, 1500);
-                return () => clearTimeout(timer);
-            } else {
-                setIsLoading(false);
-            }
-        }, []);
-
-        root.render(
-            <>
-                {isLoading && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background">
-                        <div className="flex flex-col items-center gap-4">
-                            <LoaderCircle className="h-12 w-12 animate-spin text-primary" />
-                            <p className="text-sm font-medium text-muted-foreground">Loading SMS...</p>
-                        </div>
-                    </div>
-                )}
-                <App {...props} />
-            </>
-        );
+        root.render(<AppWithLoading App={App} props={props} />);
     },
     progress: {
         color: '#4B5563',
