@@ -37,6 +37,7 @@ class User extends Authenticatable
         'salary_deduction_current',
         'position',
         'phone',
+        'avatar_path',
         'is_active',
     ];
 
@@ -44,6 +45,8 @@ class User extends Authenticatable
         'password',
         'remember_token',
     ];
+
+    protected $appends = ['avatar'];
 
     protected function casts(): array
     {
@@ -54,6 +57,14 @@ class User extends Authenticatable
             'salary_deduction_limit' => 'decimal:2',
             'salary_deduction_current' => 'decimal:2',
         ];
+    }
+
+    public function getAvatarAttribute(): ?string
+    {
+        if ($this->avatar_path) {
+            return asset('storage/' . $this->avatar_path);
+        }
+        return null;
     }
 
     public function isRole(string $role): bool
