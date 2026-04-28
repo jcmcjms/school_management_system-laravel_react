@@ -254,3 +254,34 @@ export interface AppNotification {
     created_at: string;
     time_ago?: string;
 }
+
+export interface ChatUser {
+    id: number;
+    name: string;
+    avatar?: string | null;
+    role: string;
+    email?: string;
+}
+
+export interface ChatMessage {
+    id: number;
+    body: string;
+    sender_id: number;
+    sender_name: string;
+    sender_avatar?: string | null;
+    read_at: string | null;
+    created_at: string;
+    time: string;
+}
+
+export interface ChatConversation {
+    id: number;
+    other_user: ChatUser;
+    last_message: {
+        body: string;
+        sender_id: number;
+        created_at: string;
+        time_ago: string;
+    } | null;
+    unread_count: number;
+}

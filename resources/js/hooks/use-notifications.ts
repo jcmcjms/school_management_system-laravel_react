@@ -4,10 +4,12 @@ import { type AppNotification } from '@/types';
 interface PollResponse {
     unread_count: number;
     latest: AppNotification[];
+    unread_chat_count: number;
 }
 
 export function useNotifications(intervalMs = 15000) {
     const [unreadCount, setUnreadCount] = useState(0);
+    const [unreadChatCount, setUnreadChatCount] = useState(0);
     const [notifications, setNotifications] = useState<AppNotification[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -20,6 +22,7 @@ export function useNotifications(intervalMs = 15000) {
             if (res.ok) {
                 const data: PollResponse = await res.json();
                 setUnreadCount(data.unread_count);
+                setUnreadChatCount(data.unread_chat_count || 0);
                 setNotifications(data.latest);
             }
         } catch {
@@ -35,5 +38,5 @@ export function useNotifications(intervalMs = 15000) {
         return () => clearInterval(id);
     }, [fetchNotifications, intervalMs]);
 
-    return { unreadCount, notifications, loading, refetch: fetchNotifications };
+    return { unreadCount, unreadChatCount, notifications, loading, refetch: fetchNotifications };
 }

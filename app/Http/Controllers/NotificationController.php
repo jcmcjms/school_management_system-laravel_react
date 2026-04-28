@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Message;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -30,7 +31,7 @@ class NotificationController extends Controller
         $user = $request->user();
 
         if (!$user) {
-            return response()->json(['unread_count' => 0, 'latest' => []]);
+            return response()->json(['unread_count' => 0, 'latest' => [], 'unread_chat_count' => 0]);
         }
 
         $unreadCount = $user->unreadNotifications()->count();
@@ -47,9 +48,24 @@ class NotificationController extends Controller
                 'time_ago' => $n->created_at->diffForHumans(),
             ]);
 
+        // Count unread chat messages
+        $unreadChatCount = 0;
+        try {
+            $unreadChatCount = Message::where('sender_id', '!=', $user->id)
+                ->whereNull('read_at')
+                ->whereHas('conversation', function ($q) use ($user) {
+                    $q->where('user_one_id', $user->id)
+                      ->orWhere('user_two_id', $user->id);
+                })
+                ->count();
+        } catch (\Exception $e) {
+            // Table may not exist yet
+        }
+
         return response()->json([
             'unread_count' => $unreadCount,
             'latest' => $latest,
+            'unread_chat_count' => $unreadChatCount,
         ]);
     }
 

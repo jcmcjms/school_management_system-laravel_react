@@ -15,6 +15,7 @@ use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\RevenueController;
 use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\ChatController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => redirect()->route('login'))->name('home');
@@ -31,6 +32,18 @@ Route::middleware('auth')->group(function () {
     Route::get('api/notifications/poll', [NotificationController::class, 'poll'])->name('notifications.poll');
     Route::patch('notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
     Route::post('notifications/mark-all-read', [NotificationController::class, 'markAllRead'])->name('notifications.mark-all-read');
+});
+
+// ── Chat ────────────────────────────────────────────────────────────
+Route::middleware('auth')->group(function () {
+    Route::get('chat', [ChatController::class, 'index'])->name('chat.index');
+    Route::get('chat/{conversation}', [ChatController::class, 'show'])->name('chat.show');
+    Route::post('chat/start/{user}', [ChatController::class, 'startConversation'])->name('chat.start');
+    Route::post('chat/{conversation}/messages', [ChatController::class, 'sendMessage'])->name('chat.send');
+    Route::get('api/chat/{conversation}/poll', [ChatController::class, 'pollMessages'])->name('chat.poll-messages');
+    Route::get('api/chat/poll', [ChatController::class, 'pollConversations'])->name('chat.poll-conversations');
+    Route::post('chat/{conversation}/read', [ChatController::class, 'markRead'])->name('chat.mark-read');
+    Route::get('api/chat/users', [ChatController::class, 'searchUsers'])->name('chat.search-users');
 });
 
 // ── Admin Dashboard (permission-gated) ──────────────────────────────

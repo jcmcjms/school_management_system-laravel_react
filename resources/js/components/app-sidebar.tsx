@@ -3,7 +3,7 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem, type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { ChefHat, ClipboardList, LayoutGrid, Package, Shield, ShoppingCart, Users, UtensilsCrossed, Wallet, Bell } from 'lucide-react';
+import { ChefHat, ClipboardList, LayoutGrid, Package, Shield, ShoppingCart, Users, UtensilsCrossed, Wallet, Bell, MessageCircle } from 'lucide-react';
 import AppLogo from './app-logo';
 
 function getNavItems(role: string, permissions: string[]): NavItem[] {
@@ -43,7 +43,8 @@ function getNavItems(role: string, permissions: string[]): NavItem[] {
         items.push({ title: 'Reservations', url: '/reservations', icon: ClipboardList });
     }
 
-    // Notifications (everyone)
+    // Chat & Notifications (everyone)
+    items.push({ title: 'Chat', url: '/chat', icon: MessageCircle });
     items.push({ title: 'Notifications', url: '/notifications', icon: Bell });
 
     return items;

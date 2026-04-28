@@ -209,7 +209,7 @@ class OrderController extends Controller
             return back()->withErrors(['cancel' => 'Only pending orders can be cancelled.']);
         }
 
-        return DB::transaction(function () use ($order) {
+        return DB::transaction(function () use ($order, $user) {
             // Restore stock for each item
             foreach ($order->items as $item) {
                 $menuItem = MenuItem::find($item->menu_item_id);
@@ -221,6 +221,23 @@ class OrderController extends Controller
             // Cancel any associated reservation
             if ($order->reservation) {
                 $order->reservation->update(['status' => 'cancelled']);
+            }
+
+            // Refund salary deduction if applicable
+            if ($order->payment_method === 'salary_deduction') {
+                $deduction = SalaryDeduction::where('order_id', $order->id)->first();
+                if ($deduction) {
+                    // Reverse the user's running total
+                    $orderUser = User::find($order->user_id);
+                    if ($orderUser) {
+                        $orderUser->salary_deduction_current = max(0, $orderUser->salary_deduction_current - $order->total);
+                        $orderUser->save();
+                    }
+                    $deduction->delete();
+                }
+
+                // Cancel associated payment
+                Payment::where('order_id', $order->id)->update(['status' => 'refunded']);
             }
 
             // Cancel the order

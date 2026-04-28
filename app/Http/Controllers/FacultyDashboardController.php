@@ -25,14 +25,16 @@ class FacultyDashboardController extends Controller
         $monthlyDeductions = SalaryDeduction::where('user_id', $user->id)
             ->where('payroll_month', sprintf('%02d', $thisMonth))
             ->where('payroll_year', $thisYear)
+            ->with('order:id,order_number,total,status,created_at')
+            ->orderBy('created_at', 'desc')
             ->get();
 
         $monthlyTotal = $monthlyDeductions->sum('amount');
         $limit = $user->salary_deduction_limit ?? 0;
-        $remaining = $limit - $monthlyTotal;
+        $remaining = max(0, $limit - $monthlyTotal);
 
         $lastThreeMonths = [];
-        for ($i = 0; $i < 3; $i++) {
+        for ($i = 1; $i <= 3; $i++) {
             $month = now()->subMonths($i)->month;
             $year = now()->subMonths($i)->year;
 
@@ -49,20 +51,34 @@ class FacultyDashboardController extends Controller
         }
 
         $stats = [
-            'monthlyLimit' => $limit,
-            'monthlyUsed' => $monthlyTotal,
-            'monthlyRemaining' => $remaining,
+            'monthlyLimit' => (float) $limit,
+            'monthlyUsed' => (float) $monthlyTotal,
+            'monthlyRemaining' => (float) $remaining,
             'totalOrders' => Order::where('user_id', $user->id)->count(),
             'thisMonthOrders' => Order::where('user_id', $user->id)
                 ->whereMonth('created_at', $thisMonth)
                 ->whereYear('created_at', $thisYear)
                 ->count(),
+            'currentMonth' => now()->format('F Y'),
         ];
+
+        // Format deduction history for frontend
+        $deductionHistory = $monthlyDeductions->map(fn ($d) => [
+            'id' => $d->id,
+            'amount' => (float) $d->amount,
+            'running_total' => (float) $d->running_total,
+            'order_number' => $d->order?->order_number,
+            'order_status' => $d->order?->status,
+            'created_at' => $d->created_at->toISOString(),
+            'date' => $d->created_at->format('M d, Y'),
+            'time' => $d->created_at->format('g:i A'),
+        ]);
 
         return Inertia::render('dashboard/faculty', [
             'stats' => $stats,
             'recentOrders' => $recentOrders,
             'lastThreeMonths' => $lastThreeMonths,
+            'deductionHistory' => $deductionHistory,
         ]);
     }
 }
