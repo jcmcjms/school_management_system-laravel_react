@@ -42,9 +42,12 @@ The School Canteen Management System digitizes the entire canteen workflow for a
 
 ### 🔐 Authentication & Authorization
 - Secure login, registration, and password reset via Inertia.js
-- Role-based middleware (`RoleMiddleware`) guards all routes
+- **Dual middleware system**: `RoleMiddleware` for dashboard routing + `PermissionMiddleware` for granular access control
+- **19 granular permissions** assigned to 6 roles via a `role_permission` pivot table
+- Admin UI for customizing role-permission assignments at runtime
 - Smart dashboard redirection — each role lands on their specific dashboard after login
 - Session-based authentication with CSRF protection
+- Admin role has superuser access (always passes all permission checks)
 
 ### 🍲 Menu Management (Admin / Manager)
 - Full CRUD for menu items and categories
@@ -166,10 +169,11 @@ The application follows a **modular monolith** architecture pattern:
 ### Key Design Decisions
 
 1. **Inertia.js** — No REST API needed; server-side controllers return React page components directly with props
-2. **RBAC via Middleware** — `RoleMiddleware` checks `auth()->user()->role` against route-level role requirements
-3. **Smart Redirect** — `RedirectController` dispatches authenticated users to their role-specific dashboard
-4. **Cart in LocalStorage** — Client-side cart state via custom `useCart` hook; persists across page navigations
-5. **Cashier-Confirmed Payments** — GCash and Cash are both handled at the physical counter; only salary deduction is processed in-app
+2. **Dual Authorization** — `RoleMiddleware` handles dashboard routing; `PermissionMiddleware` enforces granular access per route
+3. **Roles + Permissions** — Users have one role → each role maps to N permissions via `role_permission` pivot. Permissions shared to frontend via `HandleInertiaRequests`
+4. **Smart Redirect** — `RedirectController` dispatches authenticated users to their role-specific dashboard
+5. **Cart in LocalStorage** — Client-side cart state via custom `useCart` hook; persists across page navigations
+6. **Cashier-Confirmed Payments** — GCash and Cash are both handled at the physical counter; only salary deduction is processed in-app
 
 ---
 
@@ -227,6 +231,7 @@ php artisan migrate:fresh --seed
 ```
 
 This creates all tables and populates sample data including:
+- 6 roles with 19 permissions and a default permission matrix
 - 6 user accounts (one per role)
 - 3 menu items across 2 categories
 - 8 inventory items with a supplier
@@ -275,11 +280,14 @@ erDiagram
     Order ||--o| SalaryDeduction : "deducted from"
 ```
 
-### Tables (9 Migrations)
+### Tables (10 Migrations)
 
 | Table | Description |
 |---|---|
 | `users` | All users with role, student/employee IDs, salary deduction fields |
+| `roles` | Role definitions (admin, manager, staff, etc.) with display names |
+| `permissions` | Permission definitions grouped by feature area |
+| `role_permission` | Pivot table mapping roles to their granted permissions |
 | `menu_categories` | Menu sections (Main Dishes, Drinks, etc.) |
 | `menu_items` | Individual food/drink items with pricing, stock, allergens |
 | `menu_item_ingredients` | Recipe links — maps menu items to inventory raw materials |
@@ -297,46 +305,93 @@ erDiagram
 
 ## 👤 User Roles & Permissions
 
+The system uses a **Roles + Permissions** architecture. Each user has one role, and each role is assigned a set of granular permissions. Admins can customize role-permission assignments at runtime via the **Roles & Permissions** admin page.
+
+### Roles Overview
+
 | Role | Dashboard | Can Order | Admin Panels | Kitchen |
 |---|---|---|---|---|
-| **Admin** | Overview stats | ✅ | Menu, Users, Inventory, Revenue | ❌ |
-| **Manager** | Overview stats | ✅ | Menu, Users, Inventory, Revenue | ❌ |
+| **Admin** | Overview stats | ✅ | All (superuser) | ❌ |
+| **Manager** | Overview stats | ✅ | Menu, Inventory, Revenue (not Users by default) | ❌ |
 | **Staff** | Kitchen queue | ❌ | ❌ | ✅ Order status, QR scan, payment confirm |
 | **Faculty** | Personal orders + deduction info | ✅ (+ salary deduction) | ❌ | ❌ |
 | **Student** | Personal orders | ✅ | ❌ | ❌ |
 | **Parent** | Linked student orders | ✅ | ❌ | ❌ |
 
-### Sidebar Navigation by Role
+### Default Permission Matrix (19 Permissions)
 
-- **Admin / Manager**: Dashboard, Menu Management, Users, Inventory, Revenue, Browse Menu
-- **Staff**: Dashboard (Kitchen)
-- **Faculty / Student / Parent**: Dashboard, Browse Menu, My Orders, Reservations
+| Permission | Admin | Manager | Staff | Faculty | Student | Parent |
+|---|:---:|:---:|:---:|:---:|:---:|:---:|
+| `view_admin_dashboard` | ✅ | ✅ | | | | |
+| `manage_menu` | ✅ | ✅ | | | | |
+| `manage_categories` | ✅ | ✅ | | | | |
+| `manage_users` | ✅ | | | | | |
+| `import_users` | ✅ | | | | | |
+| `manage_inventory` | ✅ | ✅ | | | | |
+| `add_inventory_stock` | ✅ | ✅ | ✅ | | | |
+| `view_revenue` | ✅ | ✅ | | | | |
+| `export_revenue` | ✅ | ✅ | | | | |
+| `manage_deduction_limits` | ✅ | ✅ | | | | |
+| `view_kitchen` | ✅ | | ✅ | | | |
+| `update_order_status` | ✅ | | ✅ | | | |
+| `confirm_payment` | ✅ | | ✅ | | | |
+| `redeem_reservation` | ✅ | | ✅ | | | |
+| `place_order` | ✅ | ✅ | | ✅ | ✅ | ✅ |
+| `view_own_orders` | ✅ | ✅ | | ✅ | ✅ | ✅ |
+| `use_salary_deduction` | ✅ | | | ✅ | | |
+| `browse_menu` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `manage_roles` | ✅ | | | | | |
+
+### How Permissions Work
+
+```
+User (role: 'manager') → Role model → role_permission pivot → Permission checks
+```
+
+1. **Backend**: Routes use `permission:manage_menu` middleware instead of `role:admin,manager`
+2. **Frontend**: Permissions array shared via Inertia; sidebar items render based on `permissions.includes('manage_menu')`
+3. **Admin override**: Admin role always passes all permission checks (superuser in `HasPermissions` trait)
+4. **Runtime customizable**: Admins can toggle permissions per role via `/admin/roles`
+
+### Sidebar Navigation (Permission-Based)
+
+Sidebar items are dynamically rendered based on the user's permissions:
+- Dashboard link (always shown)
+- Menu Management → requires `manage_menu`
+- Users → requires `manage_users`
+- Inventory → requires `manage_inventory`
+- Revenue → requires `view_revenue`
+- Roles & Permissions → requires `manage_roles`
+- Browse Menu → requires `browse_menu`
+- My Orders → requires `view_own_orders`
+- Reservations → requires `view_own_orders`
 
 ---
 
 ## 📦 Module Breakdown
 
-### Controllers (14 total)
+### Controllers (15 total)
 
-| Controller | Routes | Access |
+| Controller | Routes | Permission Required |
 |---|---|---|
-| `RedirectController` | `GET /dashboard` | All auth |
-| `MenuController` | `GET /menu` | Public |
-| `OrderController` | `/orders/*` | All auth |
-| `ReservationController` | `/reservations/*` | All auth + Staff redeem |
-| `PaymentController` | Staff confirm payment | Staff |
-| `AdminMenuController` | `/admin/menu/*` | Admin, Manager |
-| `AdminUserController` | `/admin/users/*` | Admin, Manager |
-| `InventoryController` | `/admin/inventory/*` | Admin, Manager |
-| `RevenueController` | `/admin/revenue/*` | Admin, Manager |
-| `AdminDashboardController` | `GET /admin/dashboard` | Admin, Manager |
-| `StaffDashboardController` | `GET /staff/dashboard` | Staff |
-| `FacultyDashboardController` | `GET /faculty/dashboard` | Faculty |
-| `CustomerDashboardController` | `GET /customer/dashboard` | Student, Parent |
+| `RedirectController` | `GET /dashboard` | (auth only) |
+| `MenuController` | `GET /menu` | (public) |
+| `OrderController` | `/orders/*` | `place_order`, `view_own_orders` |
+| `ReservationController` | `/reservations/*` | `view_own_orders` + `redeem_reservation` |
+| `PaymentController` | Staff confirm payment | `confirm_payment` |
+| `AdminMenuController` | `/admin/menu/*` | `manage_menu`, `manage_categories` |
+| `AdminUserController` | `/admin/users/*` | `manage_users`, `import_users` |
+| `InventoryController` | `/admin/inventory/*` | `manage_inventory`, `add_inventory_stock` |
+| `RevenueController` | `/admin/revenue/*` | `view_revenue`, `export_revenue` |
+| `RolePermissionController` | `/admin/roles/*` | `manage_roles` |
+| `AdminDashboardController` | `GET /admin/dashboard` | `view_admin_dashboard` |
+| `StaffDashboardController` | `GET /staff/dashboard` | `view_kitchen` |
+| `FacultyDashboardController` | `GET /faculty/dashboard` | (role: faculty) |
+| `CustomerDashboardController` | `GET /customer/dashboard` | (role: student, parent) |
 
-### Models (13 total)
+### Models (15 total)
 
-`User` · `MenuCategory` · `MenuItem` · `MenuItemIngredient` · `Order` · `OrderItem` · `Reservation` · `Payment` · `SalaryDeduction` · `InventoryItem` · `InventoryTransaction` · `InventoryAlert` · `Supplier`
+`User` · `Role` · `Permission` · `MenuCategory` · `MenuItem` · `MenuItemIngredient` · `Order` · `OrderItem` · `Reservation` · `Payment` · `SalaryDeduction` · `InventoryItem` · `InventoryTransaction` · `InventoryAlert` · `Supplier`
 
 ### React Pages (15+ pages)
 
@@ -361,8 +416,10 @@ resources/js/pages/
 │   │   └── index.tsx      # User management + CSV import
 │   ├── inventory/
 │   │   └── index.tsx      # Stock levels + alerts
-│   └── revenue/
-│       └── index.tsx      # Revenue dashboard + charts
+│   ├── revenue/
+│   │   └── index.tsx      # Revenue dashboard + charts
+│   └── roles/
+│       └── index.tsx      # Role-permission matrix management
 └── auth/                  # Login, Register, Password Reset
 ```
 
@@ -386,35 +443,32 @@ resources/js/pages/
 | `GET` | `/orders/{order}` | Order detail |
 | `GET` | `/reservations` | My reservations |
 
-### Admin / Manager Routes
-| Method | URI | Description |
-|---|---|---|
-| `GET` | `/admin/dashboard` | Admin dashboard |
-| `GET/POST` | `/admin/menu` | List / Create menu items |
-| `GET` | `/admin/menu/create` | New item form |
-| `GET/PUT` | `/admin/menu/{id}/edit` | Edit item form |
-| `DELETE` | `/admin/menu/{id}` | Delete item |
-| `PATCH` | `/admin/menu/{id}/toggle` | Toggle availability |
-| `GET/POST` | `/admin/categories` | Category management |
-| `GET/POST` | `/admin/users` | List / Create users |
-| `PUT` | `/admin/users/{id}` | Update user |
-| `DELETE` | `/admin/users/{id}` | Delete user |
-| `POST` | `/admin/users/import` | CSV bulk import |
-| `PATCH` | `/admin/users/{id}/deduction-limit` | Set faculty limit |
-| `GET/POST` | `/admin/inventory` | List / Create inventory |
-| `PUT` | `/admin/inventory/{id}` | Update item |
-| `POST` | `/admin/inventory/{id}/add-stock` | Add stock |
-| `PATCH` | `/admin/inventory/alerts/{id}/acknowledge` | Acknowledge alert |
-| `GET` | `/admin/revenue` | Revenue dashboard |
-| `GET` | `/admin/revenue/export` | Export CSV |
-
-### Staff Routes
-| Method | URI | Description |
-|---|---|---|
-| `GET` | `/staff/dashboard` | Kitchen dashboard |
-| `PATCH` | `/staff/orders/{id}/status` | Update order status |
-| `POST` | `/staff/orders/{id}/confirm-payment` | Confirm GCash/Cash |
-| `POST` | `/staff/reservations/redeem` | Redeem QR code |
+### Permission-Gated Routes
+| Method | URI | Permission | Description |
+|---|---|---|---|
+| `GET` | `/admin/dashboard` | `view_admin_dashboard` | Admin dashboard |
+| `GET/POST` | `/admin/menu` | `manage_menu` | List / Create menu items |
+| `GET` | `/admin/menu/create` | `manage_menu` | New item form |
+| `GET/PUT` | `/admin/menu/{id}/edit` | `manage_menu` | Edit item form |
+| `DELETE` | `/admin/menu/{id}` | `manage_menu` | Delete item |
+| `PATCH` | `/admin/menu/{id}/toggle` | `manage_menu` | Toggle availability |
+| `GET/POST` | `/admin/categories` | `manage_categories` | Category management |
+| `GET/POST` | `/admin/users` | `manage_users` | List / Create users |
+| `PUT/DELETE` | `/admin/users/{id}` | `manage_users` | Update / Delete user |
+| `POST` | `/admin/users/import` | `import_users` | CSV bulk import |
+| `GET/POST` | `/admin/inventory` | `manage_inventory` | List / Create inventory |
+| `POST` | `/admin/inventory/{id}/add-stock` | `add_inventory_stock` | Add stock |
+| `PATCH` | `/admin/inventory/alerts/{id}` | `manage_inventory` | Acknowledge alert |
+| `GET` | `/admin/revenue` | `view_revenue` | Revenue dashboard |
+| `GET` | `/admin/revenue/export` | `export_revenue` | Export CSV |
+| `GET` | `/admin/roles` | `manage_roles` | Role-permission matrix |
+| `PUT` | `/admin/roles/{id}/permissions` | `manage_roles` | Update role permissions |
+| `GET` | `/staff/dashboard` | `view_kitchen` | Kitchen dashboard |
+| `PATCH` | `/staff/orders/{id}/status` | `update_order_status` | Update order status |
+| `POST` | `/staff/orders/{id}/confirm-payment` | `confirm_payment` | Confirm GCash/Cash |
+| `POST` | `/staff/reservations/redeem` | `redeem_reservation` | Redeem QR code |
+| `GET` | `/orders` | `view_own_orders` | Order history |
+| `GET/POST` | `/orders/create` | `place_order` | Checkout & place order |
 
 ---
 
@@ -424,13 +478,16 @@ resources/js/pages/
 sms/
 ├── app/
 │   ├── Http/
-│   │   ├── Controllers/       # 14 controllers + Auth/Settings
+│   │   ├── Controllers/       # 15 controllers + Auth/Settings
 │   │   └── Middleware/
-│   │       └── RoleMiddleware.php   # RBAC enforcement
-│   └── Models/                # 13 Eloquent models
+│   │       ├── RoleMiddleware.php       # Role-based dashboard routing
+│   │       └── PermissionMiddleware.php # Granular permission checks
+│   ├── Models/                # 15 Eloquent models (incl. Role, Permission)
+│   └── Traits/
+│       └── HasPermissions.php  # Permission checking trait for User model
 ├── database/
-│   ├── migrations/            # 9 migration files
-│   ├── seeders/               # User, Menu, Inventory seeders
+│   ├── migrations/            # 10 migration files
+│   ├── seeders/               # RolePermission, User, Menu, Inventory seeders
 │   └── factories/
 ├── resources/js/
 │   ├── components/            # Reusable UI (sidebar, nav, shadcn/ui)
@@ -441,7 +498,7 @@ sms/
 │   └── types/
 │       └── index.ts           # Full TypeScript interfaces
 ├── routes/
-│   ├── web.php                # All application routes
+│   ├── web.php                # All routes (permission-gated)
 │   ├── auth.php               # Authentication routes
 │   └── settings.php           # User settings routes
 └── public/build/              # Compiled production assets
@@ -476,6 +533,11 @@ After running `php artisan migrate:fresh --seed`, the following test data is ava
 ### Faculty Deduction
 - Faculty user has ₱2,000 monthly deduction limit with ₱150 already used
 
+### Roles & Permissions
+- 6 system roles with `is_system = true` (cannot be deleted)
+- 19 permissions grouped by feature area (dashboard, menu, users, inventory, revenue, kitchen, ordering, general, system)
+- Default permission matrix pre-configured as shown in the Permissions section above
+
 ---
 
 ## 💻 Development
@@ -507,10 +569,11 @@ php artisan tinker                  # Interactive REPL
 1. **Model**: Create/modify Eloquent model in `app/Models/`
 2. **Migration**: `php artisan make:migration create_xyz_table`
 3. **Controller**: Create in `app/Http/Controllers/`
-4. **Route**: Add to `routes/web.php` with appropriate middleware
-5. **Types**: Add TypeScript interface to `resources/js/types/index.ts`
-6. **Page**: Create React component in `resources/js/pages/`
-7. **Sidebar**: Update role navigation in `components/app-sidebar.tsx`
+4. **Permission**: Add new permission in `RolePermissionSeeder` and assign to roles
+5. **Route**: Add to `routes/web.php` with `permission:your_permission` middleware
+6. **Types**: Add TypeScript interface to `resources/js/types/index.ts`
+7. **Page**: Create React component in `resources/js/pages/`
+8. **Sidebar**: Check permission in `components/app-sidebar.tsx` to show/hide nav link
 
 ### Key Conventions
 

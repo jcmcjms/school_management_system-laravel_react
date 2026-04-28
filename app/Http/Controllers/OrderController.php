@@ -185,4 +185,42 @@ class OrderController extends Controller
             'order' => $order,
         ]);
     }
+
+    public function cancel(Request $request, Order $order)
+    {
+        $user = $request->user();
+
+        // Only the order owner can cancel
+        if ($order->user_id !== $user->id) {
+            abort(403);
+        }
+
+        // Can only cancel pending orders that haven't been paid
+        if ($order->status !== 'pending') {
+            return back()->withErrors(['cancel' => 'Only pending orders can be cancelled.']);
+        }
+
+        return DB::transaction(function () use ($order) {
+            // Restore stock for each item
+            foreach ($order->items as $item) {
+                $menuItem = MenuItem::find($item->menu_item_id);
+                if ($menuItem) {
+                    $menuItem->increment('available_quantity', $item->quantity);
+                }
+            }
+
+            // Cancel any associated reservation
+            if ($order->reservation) {
+                $order->reservation->update(['status' => 'cancelled']);
+            }
+
+            // Cancel the order
+            $order->update([
+                'status' => 'cancelled',
+                'payment_status' => 'failed',
+            ]);
+
+            return back()->with('success', 'Order cancelled successfully. Stock has been restored.');
+        });
+    }
 }

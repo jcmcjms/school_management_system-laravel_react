@@ -116,15 +116,16 @@ Route::middleware(['auth', 'role:student,parent'])->group(function () {
 });
 
 // ── Shared Authenticated Routes (permission-gated) ──────────────────
-Route::middleware(['auth', 'permission:view_own_orders'])->group(function () {
-    Route::get('orders', [OrderController::class, 'index'])->name('orders.index');
-    Route::get('orders/{order}', [OrderController::class, 'show'])->name('orders.show');
-    Route::get('reservations', [ReservationController::class, 'index'])->name('reservations.index');
-});
-
 Route::middleware(['auth', 'permission:place_order'])->group(function () {
     Route::get('orders/create', [OrderController::class, 'create'])->name('orders.create');
     Route::post('orders', [OrderController::class, 'store'])->name('orders.store');
+});
+
+Route::middleware(['auth', 'permission:view_own_orders'])->group(function () {
+    Route::get('orders', [OrderController::class, 'index'])->name('orders.index');
+    Route::get('orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+    Route::patch('orders/{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
+    Route::get('reservations', [ReservationController::class, 'index'])->name('reservations.index');
 });
 
 require __DIR__.'/settings.php';
