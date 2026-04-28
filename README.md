@@ -35,6 +35,9 @@ The School Canteen Management System digitizes the entire canteen workflow for a
 - **Multi-Payment Support** — GCash, Cash (both confirmed at counter by staff), and Salary Deduction (in-app with limit enforcement for faculty)
 - **QR Code Reservations** — Students/faculty reserve meals and present auto-generated QR codes for pickup
 - **Revenue Analytics** — Payment method breakdown, faculty deduction tracking, CSV exports
+- **Real-time Notifications** — In-app alerts for orders, payments, inventory, and reservations
+- **Chat/Messaging** — Direct messaging between users within the system
+- **User Avatars** — Profile image support for all user types
 
 ---
 
@@ -116,6 +119,25 @@ The School Canteen Management System digitizes the entire canteen workflow for a
 - QR code redemption input for reservation pickup
 - Payment confirmation modal (GCash reference / cash with change calculation)
 - Low-stock inventory alerts panel
+
+### 🔔 Notifications System (All Authenticated Users)
+- Real-time in-app notifications for:
+  - New orders received
+  - Order status changes
+  - Payment confirmations
+  - Reservation redemptions
+  - Low stock alerts
+- Polling-based updates via `/api/notifications/poll`
+- Mark as read / mark all as read functionality
+- Notification type-based styling
+
+### 💬 Chat/Messaging System (All Authenticated Users)
+- Direct messaging between any two users
+- Conversation-based threading
+- Real-time polling for new messages
+- Unread message indicators
+- Search users to start new conversations
+- Message read receipts
 
 ---
 
@@ -300,6 +322,9 @@ erDiagram
 | `inventory_transactions` | Audit trail of all stock movements |
 | `inventory_alerts` | Low-stock and out-of-stock notifications |
 | `suppliers` | Supplier contact information |
+| `notifications` | User notifications (order, payment, inventory alerts) |
+| `conversations` | Chat conversation threads between users |
+| `messages` | Individual chat messages with read receipts |
 
 ---
 
@@ -370,7 +395,7 @@ Sidebar items are dynamically rendered based on the user's permissions:
 
 ## 📦 Module Breakdown
 
-### Controllers (15 total)
+### Controllers (17 total)
 
 | Controller | Routes | Permission Required |
 |---|---|---|
@@ -384,14 +409,17 @@ Sidebar items are dynamically rendered based on the user's permissions:
 | `InventoryController` | `/admin/inventory/*` | `manage_inventory`, `add_inventory_stock` |
 | `RevenueController` | `/admin/revenue/*` | `view_revenue`, `export_revenue` |
 | `RolePermissionController` | `/admin/roles/*` | `manage_roles` |
+| `NotificationController` | `/notifications/*` | (auth only) |
+| `ChatController` | `/chat/*` | (auth only) |
+| `SalaryDeductionController` | `/admin/salary-deductions/*` | `manage_deduction_limits` |
 | `AdminDashboardController` | `GET /admin/dashboard` | `view_admin_dashboard` |
 | `StaffDashboardController` | `GET /staff/dashboard` | `view_kitchen` |
 | `FacultyDashboardController` | `GET /faculty/dashboard` | (role: faculty) |
 | `CustomerDashboardController` | `GET /customer/dashboard` | (role: student, parent) |
 
-### Models (15 total)
+### Models (17 total)
 
-`User` · `Role` · `Permission` · `MenuCategory` · `MenuItem` · `MenuItemIngredient` · `Order` · `OrderItem` · `Reservation` · `Payment` · `SalaryDeduction` · `InventoryItem` · `InventoryTransaction` · `InventoryAlert` · `Supplier`
+`User` · `Role` · `Permission` · `MenuCategory` · `MenuItem` · `MenuItemIngredient` · `Order` · `OrderItem` · `Reservation` · `Payment` · `SalaryDeduction` · `InventoryItem` · `InventoryTransaction` · `InventoryAlert` · `Supplier` · `Conversation` · `Message`
 
 ### React Pages (15+ pages)
 
@@ -433,6 +461,26 @@ resources/js/pages/
 | `GET` | `/menu` | Browse menu |
 | `GET` | `/menu/{menuItem}` | Menu item detail |
 
+### Notification Routes (All Authenticated)
+| Method | URI | Description |
+|---|---|---|
+| `GET` | `/notifications` | List notifications |
+| `GET` | `/api/notifications/poll` | Poll for new notifications |
+| `PATCH` | `/notifications/{id}/read` | Mark as read |
+| `POST` | `/notifications/mark-all-read` | Mark all as read |
+
+### Chat Routes (All Authenticated)
+| Method | URI | Description |
+|---|---|---|
+| `GET` | `/chat` | List conversations |
+| `GET` | `/chat/{conversation}` | View conversation |
+| `POST` | `/chat/start/{user}` | Start new conversation |
+| `POST` | `/chat/{conversation}/messages` | Send message |
+| `GET` | `/api/chat/{conversation}/poll` | Poll for new messages |
+| `GET` | `/api/chat/poll` | Poll for new conversations |
+| `POST` | `/chat/{conversation}/read` | Mark as read |
+| `GET` | `/api/chat/users` | Search users to chat with |
+
 ### Authenticated Routes (All Roles)
 | Method | URI | Description |
 |---|---|---|
@@ -470,6 +518,13 @@ resources/js/pages/
 | `GET` | `/orders` | `view_own_orders` | Order history |
 | `GET/POST` | `/orders/create` | `place_order` | Checkout & place order |
 
+### Salary Deduction Routes (Admin/Manager)
+| Method | URI | Permission | Description |
+|---|---|---|---|
+| `GET` | `/admin/salary-deductions` | `manage_deduction_limits` | List all faculty deductions |
+| `GET` | `/admin/salary-deductions/{user}` | `manage_deduction_limits` | Faculty deduction details |
+| `PATCH` | `/admin/salary-deductions/{user}/limit` | `manage_deduction_limits` | Update deduction limit |
+
 ---
 
 ## 📁 Project Structure
@@ -478,15 +533,16 @@ resources/js/pages/
 sms/
 ├── app/
 │   ├── Http/
-│   │   ├── Controllers/       # 15 controllers + Auth/Settings
+│   │   ├── Controllers/       # 17 controllers + Auth/Settings
 │   │   └── Middleware/
 │   │       ├── RoleMiddleware.php       # Role-based dashboard routing
 │   │       └── PermissionMiddleware.php # Granular permission checks
-│   ├── Models/                # 15 Eloquent models (incl. Role, Permission)
-│   └── Traits/
-│       └── HasPermissions.php  # Permission checking trait for User model
+│   ├── Models/                # 17 Eloquent models (incl. Role, Permission, Conversation, Message)
+│   ├── Traits/
+│   │   └── HasPermissions.php  # Permission checking trait for User model
+│   └── Notifications/        # Notification classes (6 types)
 ├── database/
-│   ├── migrations/            # 10 migration files
+│   ├── migrations/            # 13 migration files
 │   ├── seeders/               # RolePermission, User, Menu, Inventory seeders
 │   └── factories/
 ├── resources/js/
