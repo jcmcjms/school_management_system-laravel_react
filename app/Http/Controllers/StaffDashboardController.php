@@ -13,21 +13,27 @@ class StaffDashboardController extends Controller
 {
     public function index()
     {
-        $orders = Order::with(['user', 'items.menuItem'])
-            ->whereIn('status', ['pending', 'preparing'])
+        $pendingOrders = Order::with(['user', 'items.menuItem', 'payment'])
+            ->where('status', 'pending')
             ->orderBy('created_at', 'asc')
-            ->limit(20)
             ->get();
 
-        $preparingOrders = Order::with(['user', 'items.menuItem'])
+        $preparingOrders = Order::with(['user', 'items.menuItem', 'payment'])
             ->where('status', 'preparing')
             ->orderBy('created_at', 'asc')
             ->get();
 
-        $readyOrders = Order::with(['user', 'items.menuItem'])
+        $readyOrders = Order::with(['user', 'items.menuItem', 'payment'])
             ->where('status', 'ready')
             ->orderBy('created_at', 'desc')
-            ->limit(10)
+            ->limit(15)
+            ->get();
+
+        $servedToday = Order::with(['user', 'items.menuItem', 'payment'])
+            ->where('status', 'served')
+            ->whereDate('created_at', now()->toDateString())
+            ->orderBy('served_at', 'desc')
+            ->limit(20)
             ->get();
 
         $lowStockInventory = InventoryItem::whereRaw('current_quantity <= minimum_quantity')
@@ -42,14 +48,23 @@ class StaffDashboardController extends Controller
             'served' => Order::where('status', 'served')
                 ->whereDate('created_at', now()->toDateString())
                 ->count(),
+            'cancelled' => Order::where('status', 'cancelled')
+                ->whereDate('created_at', now()->toDateString())
+                ->count(),
         ];
 
+        $todayRevenue = Order::where('payment_status', 'paid')
+            ->whereDate('created_at', now()->toDateString())
+            ->sum('total');
+
         return Inertia::render('dashboard/staff', [
-            'orders' => $orders,
+            'pendingOrders' => $pendingOrders,
             'preparingOrders' => $preparingOrders,
             'readyOrders' => $readyOrders,
+            'servedToday' => $servedToday,
             'lowStockInventory' => $lowStockInventory,
             'statusCounts' => $statusCounts,
+            'todayRevenue' => (float) $todayRevenue,
         ]);
     }
 
@@ -59,25 +74,30 @@ class StaffDashboardController extends Controller
             'status' => 'required|in:pending,preparing,ready,served',
         ]);
 
-        $order->update(['status' => $request->status]);
+        $oldStatus = $order->status;
+        $newStatus = $request->status;
 
-        if ($request->status === 'preparing') {
-            foreach ($order->items as $item) {
-                $menuItem = $item->menuItem;
-                if ($menuItem) {
-                    $menuItem->decrementStock($item->quantity);
-                }
-            }
+        // Validate valid transitions
+        $validTransitions = [
+            'pending' => ['preparing'],
+            'preparing' => ['ready'],
+            'ready' => ['served'],
+        ];
+
+        if (!isset($validTransitions[$oldStatus]) || !in_array($newStatus, $validTransitions[$oldStatus])) {
+            return back()->withErrors(['status' => "Cannot change status from {$oldStatus} to {$newStatus}."]);
         }
 
-        if ($request->status === 'served') {
+        $order->update(['status' => $newStatus]);
+
+        if ($newStatus === 'served') {
             $order->markAsServed();
         }
 
         // Notify the customer about the status change
         $order->load('user');
         if ($order->user) {
-            $order->user->notify(new OrderStatusChanged($order, $request->status));
+            $order->user->notify(new OrderStatusChanged($order, $newStatus));
         }
 
         return back()->with('success', 'Order status updated');
