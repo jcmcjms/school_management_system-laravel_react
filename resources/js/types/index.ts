@@ -28,7 +28,7 @@ export interface SharedData {
     [key: string]: unknown;
 }
 
-export type UserRole = 'admin' | 'manager' | 'staff' | 'student' | 'parent' | 'faculty';
+export type UserRole = 'admin' | 'manager' | 'staff' | 'librarian' | 'student' | 'parent' | 'faculty';
 
 export interface User {
     id: number;
@@ -285,4 +285,85 @@ export interface ChatConversation {
         time_ago: string;
     } | null;
     unread_count: number;
+}
+
+export interface LibraryCategory {
+    id: number;
+    name: string;
+    description: string | null;
+    parent_id: number | null;
+    children?: LibraryCategory[];
+    created_at: string;
+    updated_at: string;
+}
+
+export interface LibraryBook {
+    id: number;
+    isbn: string;
+    title: string;
+    author: string;
+    publisher: string | null;
+    published_year: number | null;
+    category_id: number | null;
+    description: string | null;
+    cover_image: string | null;
+    total_copies: number;
+    available_copies: number;
+    location: string | null;
+    status: 'available' | 'unavailable' | 'archived';
+    category?: LibraryCategory;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface LibraryBorrowing {
+    id: number;
+    book_id: number;
+    user_id: number;
+    borrowed_at: string;
+    due_date: string;
+    returned_at: string | null;
+    status: 'borrowed' | 'returned' | 'overdue' | 'lost';
+    notes: string | null;
+    book?: LibraryBook;
+    user?: User;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface LibraryReservation {
+    id: number;
+    book_id: number;
+    user_id: number;
+    reserved_at: string;
+    expires_at: string;
+    fulfilled_at: string | null;
+    status: 'pending' | 'fulfilled' | 'expired' | 'cancelled';
+    book?: LibraryBook;
+    user?: User;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface LibraryFine {
+    id: number;
+    borrowing_id: number;
+    user_id: number;
+    amount: number;
+    reason: string | null;
+    status: 'pending' | 'paid' | 'waived';
+    paid_at: string | null;
+    borrowing?: LibraryBorrowing;
+    user?: User;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface LibraryStats {
+    total_books: number;
+    available_books: number;
+    active_borrowings: number;
+    pending_reservations: number;
+    unpaid_fines: number;
+    overdue_borrowings: number;
 }

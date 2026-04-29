@@ -3,7 +3,7 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem, type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { ChefHat, ClipboardList, LayoutGrid, Package, Shield, ShoppingCart, Users, UtensilsCrossed, Wallet, Bell, MessageCircle, Grid3X3, CreditCard, DollarSign } from 'lucide-react';
+import { ChefHat, ClipboardList, LayoutGrid, Package, Shield, ShoppingCart, Users, UtensilsCrossed, Wallet, Bell, MessageCircle, Grid3X3, CreditCard, DollarSign, BookOpen, Coins, FolderTree, BarChart3 } from 'lucide-react';
 import AppLogo from './app-logo';
 
 function getNavItems(role: string, permissions: string[]): NavItem[] {
@@ -55,6 +55,18 @@ function getNavItems(role: string, permissions: string[]): NavItem[] {
     // Chat & Notifications (everyone)
     items.push({ title: 'Chat', url: '/chat', icon: MessageCircle });
     items.push({ title: 'Notifications', url: '/notifications', icon: Bell });
+
+    // Library module
+    if (has('manage_library') || role === 'librarian') {
+        items.push({ title: 'Library', url: '/library', icon: BookOpen });
+        items.push({ title: 'Library Books', url: '/library/books', icon: BookOpen });
+        items.push({ title: 'Borrowings', url: '/library/borrowings', icon: ClipboardList });
+        items.push({ title: 'Fines', url: '/library/fines', icon: Coins });
+        items.push({ title: 'Categories', url: '/library/categories', icon: FolderTree });
+        items.push({ title: 'Reports', url: '/library/reports', icon: BarChart3 });
+    } else if (has('view_library') || role === 'student' || role === 'faculty') {
+        items.push({ title: 'Library', url: '/library', icon: BookOpen });
+    }
 
     return items;
 }

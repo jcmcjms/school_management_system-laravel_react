@@ -16,6 +16,7 @@ class User extends Authenticatable
         'admin' => 'Admin',
         'manager' => 'Manager',
         'staff' => 'Staff',
+        'librarian' => 'Librarian',
         'student' => 'Student',
         'parent' => 'Parent',
         'faculty' => 'Faculty',
@@ -102,6 +103,11 @@ class User extends Authenticatable
         return $this->role === 'faculty';
     }
 
+    public function isLibrarian(): bool
+    {
+        return $this->role === 'librarian';
+    }
+
     public function isEmployee(): bool
     {
         return in_array($this->role, ['admin', 'manager', 'staff', 'faculty']);
@@ -155,5 +161,48 @@ class User extends Authenticatable
     public function canDeductSalary(float $amount): bool
     {
         return $this->isEmployee() && $this->salary_deduction_limit > 0 && $this->getRemainingDeductionLimit() >= $amount;
+    }
+
+    public function libraryBorrowings()
+    {
+        return $this->hasMany(\App\Models\LibraryBorrowing::class, 'user_id');
+    }
+
+    public function libraryReservations()
+    {
+        return $this->hasMany(\App\Models\LibraryReservation::class, 'user_id');
+    }
+
+    public function libraryFines()
+    {
+        return $this->hasMany(\App\Models\LibraryFine::class, 'user_id');
+    }
+
+    public function activeBorrowings()
+    {
+        return $this->libraryBorrowings()->whereIn('status', ['borrowed', 'overdue']);
+    }
+
+    public function pendingReservations()
+    {
+        return $this->libraryReservations()->where('status', 'pending');
+    }
+
+    public function unpaidFines()
+    {
+        return $this->libraryFines()->where('status', 'pending');
+    }
+
+    public function canBorrowBooks(): bool
+    {
+        if ($this->isStudent() || $this->isFaculty()) {
+            return $this->activeBorrowings()->count() < config('library.max_borrow_limit', 3);
+        }
+        return false;
+    }
+
+    public function hasUnpaidFines(): bool
+    {
+        return $this->unpaidFines()->exists();
     }
 }
