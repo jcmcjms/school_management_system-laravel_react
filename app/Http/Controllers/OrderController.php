@@ -8,8 +8,12 @@ use App\Models\OrderItem;
 use App\Models\Payment;
 use App\Models\Reservation;
 use App\Models\SalaryDeduction;
+use App\Models\User;
+use App\Notifications\NewOrderReceived;
+use App\Notifications\OrderCancelled;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Inertia\Inertia;
 
 class OrderController extends Controller
@@ -33,7 +37,7 @@ class OrderController extends Controller
         $user = $request->user();
 
         $deductionInfo = null;
-        if ($user->isFaculty()) {
+        if ($user->isEmployee() && $user->salary_deduction_limit > 0) {
             $thisMonth = now()->month;
             $thisYear = now()->year;
             $monthlyUsed = SalaryDeduction::where('user_id', $user->id)
@@ -62,7 +66,7 @@ class OrderController extends Controller
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.special_instructions' => 'nullable|string|max:255',
             'payment_method' => 'required|in:gcash,cash,salary_deduction',
-            'pickup_time' => 'nullable|date_format:H:i',
+            'pickup_time' => 'required|date_format:H:i',
             'notes' => 'nullable|string|max:500',
         ]);
 
@@ -70,8 +74,8 @@ class OrderController extends Controller
 
         // Validate faculty salary deduction limit
         if ($request->payment_method === 'salary_deduction') {
-            if (!$user->isFaculty()) {
-                return back()->withErrors(['payment_method' => 'Salary deduction is only available for faculty members.']);
+            if (!$user->isEmployee() || $user->salary_deduction_limit <= 0) {
+                return back()->withErrors(['payment_method' => 'Salary deduction is not available for your account.']);
             }
         }
 
@@ -152,6 +156,14 @@ class OrderController extends Controller
                 ]);
 
                 $order->markAsPaid();
+
+                // Confirm the reservation when payment is processed
+                if ($request->pickup_time) {
+                    $reservation = Reservation::where('order_id', $order->id)->first();
+                    if ($reservation) {
+                        $reservation->update(['status' => 'confirmed']);
+                    }
+                }
             }
 
             // Create reservation if pickup time is set
@@ -164,6 +176,11 @@ class OrderController extends Controller
                     'reserved_pickup_time' => $request->pickup_time,
                 ]);
             }
+
+            // Notify all staff about the new order
+            $order->load('user');
+            $staffUsers = User::where('role', 'staff')->get();
+            Notification::send($staffUsers, new NewOrderReceived($order));
 
             return redirect()->route('orders.show', $order->id)
                 ->with('success', 'Order placed successfully!');
@@ -184,5 +201,64 @@ class OrderController extends Controller
         return Inertia::render('orders/show', [
             'order' => $order,
         ]);
+    }
+
+    public function cancel(Request $request, Order $order)
+    {
+        $user = $request->user();
+
+        // Only the order owner can cancel
+        if ($order->user_id !== $user->id) {
+            abort(403);
+        }
+
+        // Can only cancel pending orders that haven't been paid
+        if ($order->status !== 'pending') {
+            return back()->withErrors(['cancel' => 'Only pending orders can be cancelled.']);
+        }
+
+        return DB::transaction(function () use ($order, $user) {
+            // Restore stock for each item
+            foreach ($order->items as $item) {
+                $menuItem = MenuItem::find($item->menu_item_id);
+                if ($menuItem) {
+                    $menuItem->increment('available_quantity', $item->quantity);
+                }
+            }
+
+            // Cancel any associated reservation
+            if ($order->reservation) {
+                $order->reservation->update(['status' => 'cancelled']);
+            }
+
+            // Refund salary deduction if applicable
+            if ($order->payment_method === 'salary_deduction') {
+                $deduction = SalaryDeduction::where('order_id', $order->id)->first();
+                if ($deduction) {
+                    // Reverse the user's running total
+                    $orderUser = User::find($order->user_id);
+                    if ($orderUser) {
+                        $orderUser->salary_deduction_current = max(0, $orderUser->salary_deduction_current - $order->total);
+                        $orderUser->save();
+                    }
+                    $deduction->delete();
+                }
+
+                // Cancel associated payment
+                Payment::where('order_id', $order->id)->update(['status' => 'refunded']);
+            }
+
+            // Cancel the order
+            $order->update([
+                'status' => 'cancelled',
+                'payment_status' => 'failed',
+            ]);
+
+            // Notify staff about cancellation
+            $staffUsers = User::where('role', 'staff')->get();
+            Notification::send($staffUsers, new OrderCancelled($order));
+
+            return back()->with('success', 'Order cancelled successfully. Stock has been restored.');
+        });
     }
 }

@@ -7,6 +7,7 @@ use App\Models\MenuItem;
 use App\Models\MenuItemIngredient;
 use App\Models\InventoryItem;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 
@@ -52,7 +53,7 @@ class AdminMenuController extends Controller
             'category_id' => 'required|exists:menu_categories,id',
             'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
-            'image_url' => 'nullable|url|max:500',
+            'image' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:5120',
             'available_quantity' => 'required|integer|min:0',
             'low_stock_threshold' => 'integer|min:0',
             'allergens' => 'nullable|array',
@@ -69,13 +70,18 @@ class AdminMenuController extends Controller
             'ingredients.*.unit' => 'required|string|max:50',
         ]);
 
+        $imageUrl = null;
+        if ($request->hasFile('image')) {
+            $imageUrl = '/storage/' . $request->file('image')->store('menu-items', 'public');
+        }
+
         $menuItem = MenuItem::create([
             'name' => $validated['name'],
             'slug' => Str::slug($validated['name']) . '-' . Str::random(4),
             'category_id' => $validated['category_id'],
             'description' => $validated['description'] ?? null,
             'price' => $validated['price'],
-            'image_url' => $validated['image_url'] ?? null,
+            'image_url' => $imageUrl,
             'available_quantity' => $validated['available_quantity'],
             'low_stock_threshold' => $validated['low_stock_threshold'] ?? 5,
             'allergens' => $validated['allergens'] ?? null,
@@ -125,7 +131,7 @@ class AdminMenuController extends Controller
             'category_id' => 'required|exists:menu_categories,id',
             'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
-            'image_url' => 'nullable|url|max:500',
+            'image' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:5120',
             'available_quantity' => 'required|integer|min:0',
             'low_stock_threshold' => 'integer|min:0',
             'allergens' => 'nullable|array',
@@ -142,12 +148,11 @@ class AdminMenuController extends Controller
             'ingredients.*.unit' => 'required|string|max:50',
         ]);
 
-        $menuItem->update([
+        $updateData = [
             'name' => $validated['name'],
             'category_id' => $validated['category_id'],
             'description' => $validated['description'] ?? null,
             'price' => $validated['price'],
-            'image_url' => $validated['image_url'] ?? null,
             'available_quantity' => $validated['available_quantity'],
             'low_stock_threshold' => $validated['low_stock_threshold'] ?? 5,
             'allergens' => $validated['allergens'] ?? null,
@@ -156,7 +161,17 @@ class AdminMenuController extends Controller
             'daily_end_time' => $validated['daily_end_time'] ?? null,
             'is_available' => $validated['is_available'] ?? true,
             'is_featured' => $validated['is_featured'] ?? false,
-        ]);
+        ];
+
+        if ($request->hasFile('image')) {
+            // Delete old image if it was uploaded (not external URL)
+            if ($menuItem->image_url && str_starts_with($menuItem->image_url, '/storage/')) {
+                Storage::disk('public')->delete(str_replace('/storage/', '', $menuItem->image_url));
+            }
+            $updateData['image_url'] = '/storage/' . $request->file('image')->store('menu-items', 'public');
+        }
+
+        $menuItem->update($updateData);
 
         $menuItem->updateAvailabilityStatus();
 
@@ -252,5 +267,107 @@ class AdminMenuController extends Controller
 
         $category->delete();
         return back()->with('success', 'Category deleted.');
+    }
+
+    public function export()
+    {
+        $items = MenuItem::with('category')->orderBy('name')->get();
+
+        $headers = ['Name', 'Category', 'Price', 'Stock', 'Low Stock Threshold', 'Status', 'Available', 'Description', 'Allergens'];
+
+        $rows = $items->map(function ($item) {
+            return [
+                $item->name,
+                $item->category?->name ?? '',
+                $item->price,
+                $item->available_quantity,
+                $item->low_stock_threshold,
+                $item->availability_status,
+                $item->is_available ? 'Yes' : 'No',
+                $item->description,
+                is_array($item->allergens) ? implode(', ', $item->allergens) : '',
+            ];
+        });
+
+        $csvContent = implode(",", $headers) . "\n";
+        foreach ($rows as $row) {
+            $csvContent .= implode(",", array_map(function ($cell) {
+                return '"' . str_replace('"', '""', $cell) . '"';
+            }, $row)) . "\n";
+        }
+
+        $filename = 'menu-items-' . date('Y-m-d') . '.csv';
+
+        return response($csvContent, 200, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=\"$filename\"",
+        ]);
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:csv,txt',
+        ]);
+
+        $file = $request->file('file');
+        $handle = fopen($file->getRealPath(), 'r');
+        $header = fgetcsv($handle);
+
+        $rowCount = 0;
+        $errorRows = [];
+
+        while (($row = fgetcsv($handle)) !== false) {
+            $data = array_combine($header, $row);
+
+            try {
+                $categoryName = trim($data['Category'] ?? '');
+                $categoryId = null;
+
+                if ($categoryName) {
+                    $category = MenuCategory::where('name', $categoryName)->first();
+                    if ($category) {
+                        $categoryId = $category->id;
+                    } else {
+                        $category = MenuCategory::create([
+                            'name' => $categoryName,
+                            'slug' => Str::slug($categoryName),
+                            'is_active' => true,
+                        ]);
+                        $categoryId = $category->id;
+                    }
+                }
+
+                $allergens = [];
+                if (!empty($data['Allergens'])) {
+                    $allergens = array_map('trim', explode(',', $data['Allergens']));
+                }
+
+                MenuItem::create([
+                    'name' => trim($data['Name'] ?? 'Unnamed Item'),
+                    'slug' => Str::slug($data['Name'] ?? 'unnamed') . '-' . Str::random(4),
+                    'category_id' => $categoryId,
+                    'description' => trim($data['Description'] ?? null),
+                    'price' => floatval($data['Price'] ?? 0),
+                    'available_quantity' => intval($data['Stock'] ?? 0),
+                    'low_stock_threshold' => intval($data['Low Stock Threshold'] ?? 5),
+                    'is_available' => strtolower(trim($data['Available'] ?? 'yes')) === 'yes',
+                    'allergens' => $allergens,
+                    'availability_status' => 'available',
+                ]);
+
+                $rowCount++;
+            } catch (\Exception $e) {
+                $errorRows[] = $rowCount + 1;
+            }
+        }
+
+        fclose($handle);
+
+        if (empty($errorRows)) {
+            return back()->with('success', "Successfully imported {$rowCount} menu items.");
+        }
+
+        return back()->with('warning', "Imported {$rowCount} items. Failed on rows: " . implode(', ', $errorRows));
     }
 }

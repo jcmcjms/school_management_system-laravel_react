@@ -61,6 +61,7 @@ export interface MenuCategory {
     sort_order: number;
     is_active: boolean;
     menu_items?: MenuItem[];
+    menu_items_count?: number;
     created_at: string;
     updated_at: string;
 }
@@ -236,4 +237,52 @@ export interface PaginatedData<T> {
     total: number;
     from: number | null;
     to: number | null;
+}
+
+export interface AppNotification {
+    id: string;
+    data: {
+        title: string;
+        message: string;
+        url: string;
+        icon: string;
+        type: string;
+        order_number?: string;
+        status?: string;
+        item_name?: string;
+    };
+    read_at: string | null;
+    created_at: string;
+    time_ago?: string;
+}
+
+export interface ChatUser {
+    id: number;
+    name: string;
+    avatar?: string | null;
+    role: string;
+    email?: string;
+}
+
+export interface ChatMessage {
+    id: number;
+    body: string;
+    sender_id: number;
+    sender_name: string;
+    sender_avatar?: string | null;
+    read_at: string | null;
+    created_at: string;
+    time: string;
+}
+
+export interface ChatConversation {
+    id: number;
+    other_user: ChatUser;
+    last_message: {
+        body: string;
+        sender_id: number;
+        created_at: string;
+        time_ago: string;
+    } | null;
+    unread_count: number;
 }

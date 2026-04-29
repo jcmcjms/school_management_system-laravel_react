@@ -16,7 +16,11 @@ class MenuController extends Controller
             ->get()
             ->map(function ($category) {
                 $category->menuItems = $category->menuItems
-                    ->filter(fn ($item) => $item->is_available && $item->available_quantity > 0)
+                    ->filter(fn ($item) => 
+                        $item->is_available && 
+                        $item->available_quantity > 0 &&
+                        !in_array($item->availability_status, ['sold_out', 'hidden'])
+                    )
                     ->values();
                 return $category;
             });

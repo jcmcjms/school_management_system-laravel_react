@@ -28,16 +28,22 @@ class RevenueController extends Controller
             ->where('payment_status', 'paid')
             ->orderBy('created_at', 'desc')->limit(20)->get();
 
-        // Faculty near deduction limits
-        $facultyUsers = User::where('role', 'faculty')
+        // Employees near deduction limits
+        $employeeUsers = User::whereIn('role', ['manager', 'staff', 'faculty'])
             ->where('is_active', true)
+            ->where('salary_deduction_limit', '>', 0)
             ->get()->map(function ($user) {
+                $thisMonth = now()->month;
+                $thisYear = now()->year;
                 $limit = (float) $user->salary_deduction_limit;
-                $current = (float) $user->salary_deduction_current;
-                $remaining = $limit - $current;
+                $current = (float) SalaryDeduction::where('user_id', $user->id)
+                    ->where('payroll_month', sprintf('%02d', $thisMonth))
+                    ->where('payroll_year', $thisYear)
+                    ->sum('amount');
+                $remaining = max(0, $limit - $current);
                 $percentage = $limit > 0 ? ($current / $limit) * 100 : 0;
                 return [
-                    'id' => $user->id, 'name' => $user->name,
+                    'id' => $user->id, 'name' => $user->name, 'role' => $user->role,
                     'employee_id' => $user->employee_id, 'department' => $user->department,
                     'limit' => $limit, 'used' => $current,
                     'remaining' => $remaining, 'percentage' => round($percentage, 1),
@@ -45,14 +51,38 @@ class RevenueController extends Controller
                 ];
             })->sortByDesc('percentage')->values();
 
+        // Top selling items
+        $topItems = \DB::table('order_items')
+            ->join('menu_items', 'order_items.menu_item_id', '=', 'menu_items.id')
+            ->join('orders', 'order_items.order_id', '=', 'orders.id')
+            ->whereBetween('orders.created_at', [$startDate, $endDate])
+            ->where('orders.payment_status', 'paid')
+            ->select('menu_items.id', 'menu_items.name', \DB::raw('SUM(order_items.quantity) as total_qty'), \DB::raw('SUM(order_items.subtotal) as total_revenue'))
+            ->groupBy('menu_items.id', 'menu_items.name')
+            ->orderByDesc('total_revenue')
+            ->limit(10)
+            ->get();
+
+        // Daily revenue for trend
+        $dailyRevenue = \DB::table('orders')
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->where('payment_status', 'paid')
+            ->select(\DB::raw('DATE(created_at) as date'), \DB::raw('SUM(total) as daily_total'), \DB::raw('COUNT(*) as order_count'))
+            ->groupBy('date')
+            ->orderBy('date')
+            ->get();
+
         return Inertia::render('admin/revenue/index', [
             'revenue' => [
                 'total' => $gcashTotal + $cashTotal + $deductionTotal,
                 'gcash' => $gcashTotal, 'cash' => $cashTotal, 'salary_deduction' => $deductionTotal,
                 'order_count' => $orders->count(),
+                'average_order' => $orders->count() > 0 ? ($gcashTotal + $cashTotal + $deductionTotal) / $orders->count() : 0,
             ],
             'recentOrders' => $recentOrders,
-            'facultyDeductions' => $facultyUsers,
+            'employeeDeductions' => $employeeUsers,
+            'topItems' => $topItems,
+            'dailyRevenue' => $dailyRevenue,
             'filters' => [
                 'start_date' => $startDate->toDateString(),
                 'end_date' => $endDate->toDateString(),

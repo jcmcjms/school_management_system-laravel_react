@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Order;
 use App\Models\Payment;
+use App\Notifications\PaymentConfirmed;
 use Illuminate\Http\Request;
 
 class PaymentController extends Controller
@@ -51,6 +52,17 @@ class PaymentController extends Controller
         }
 
         $order->markAsPaid();
+
+        // Confirm the reservation when payment is verified
+        if ($order->reservation) {
+            $order->reservation->update(['status' => 'confirmed']);
+        }
+
+        // Notify the customer
+        $order->load('user');
+        if ($order->user) {
+            $order->user->notify(new PaymentConfirmed($order));
+        }
 
         return back()->with('success', 'Payment confirmed successfully.');
     }

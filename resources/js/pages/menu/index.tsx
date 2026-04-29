@@ -58,7 +58,7 @@ export default function MenuIndex() {
 
                 {/* Floating Cart Panel */}
                 {showCart && itemCount > 0 && (
-                    <div className="fixed right-4 top-20 z-50 w-80 rounded-lg border bg-card p-4 shadow-xl">
+                    <div className="fixed inset-x-2 top-16 z-50 mx-auto max-w-sm rounded-lg border bg-card p-4 shadow-xl sm:inset-x-auto sm:right-4 sm:left-auto sm:top-20 sm:w-80">
                         <div className="flex items-center justify-between mb-3">
                             <h3 className="font-semibold">Your Cart ({itemCount})</h3>
                             <button onClick={() => setShowCart(false)} className="rounded p-1 hover:bg-accent"><X className="h-4 w-4" /></button>
@@ -98,20 +98,23 @@ export default function MenuIndex() {
                                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                                     {category.menu_items.map((item) => {
                                         const inCart = getCartQty(item.id);
+                                        const isSoldOut = item.availability_status === 'sold_out';
+                                        const isLimited = item.availability_status === 'limited';
                                         return (
-                                            <Card key={item.id} className="transition-all hover:shadow-md">
+                                            <Card key={item.id} className={`transition-all ${isSoldOut ? 'opacity-60' : 'hover:shadow-md'}`}>
                                                 {item.image_url && (
-                                                    <div className="aspect-video w-full overflow-hidden rounded-t-lg cursor-pointer" onClick={() => handleItemClick(item)}>
-                                                        <img src={item.image_url} alt={item.name} className="h-full w-full object-cover" />
+                                                    <div className={`aspect-video w-full overflow-hidden rounded-t-lg ${isSoldOut ? '' : 'cursor-pointer'}`} onClick={() => !isSoldOut && handleItemClick(item)}>
+                                                        <img src={item.image_url} alt={item.name} className={`h-full w-full object-cover ${isSoldOut ? 'grayscale' : ''}`} />
                                                     </div>
                                                 )}
-                                                <CardHeader className="cursor-pointer" onClick={() => handleItemClick(item)}>
+                                                <CardHeader className={isSoldOut ? '' : 'cursor-pointer'} onClick={() => !isSoldOut && handleItemClick(item)}>
                                                     <div className="flex items-start justify-between">
                                                         <CardTitle className="text-lg">{item.name}</CardTitle>
-                                                        {item.availability_status === 'limited' && <Badge variant="secondary" className="text-xs">Limited</Badge>}
+                                                        {isSoldOut && <Badge variant="destructive" className="text-xs">Sold Out</Badge>}
+                                                        {isLimited && !isSoldOut && <Badge variant="secondary" className="text-xs">Limited</Badge>}
                                                     </div>
                                                 </CardHeader>
-                                                <CardContent className="cursor-pointer" onClick={() => handleItemClick(item)}>
+                                                <CardContent className={isSoldOut ? '' : 'cursor-pointer'} onClick={() => !isSoldOut && handleItemClick(item)}>
                                                     <p className="text-muted-foreground line-clamp-2 text-sm">{item.description || 'No description available'}</p>
                                                     {item.allergens && item.allergens.length > 0 && (
                                                         <div className="mt-2 flex flex-wrap gap-1">
@@ -121,7 +124,11 @@ export default function MenuIndex() {
                                                 </CardContent>
                                                 <CardFooter className="flex justify-between items-center">
                                                     <span className="text-lg font-semibold">₱{formatPrice(item.price)}</span>
-                                                    {inCart > 0 ? (
+                                                    {isSoldOut ? (
+                                                        <Button size="sm" variant="secondary" disabled className="cursor-not-allowed">
+                                                            Unavailable
+                                                        </Button>
+                                                    ) : inCart > 0 ? (
                                                         <div className="flex items-center gap-2">
                                                             <button onClick={() => updateQuantity(item.id, inCart - 1)} className="rounded-md border p-1 hover:bg-accent"><Minus className="h-4 w-4" /></button>
                                                             <span className="w-6 text-center font-medium">{inCart}</span>
@@ -161,7 +168,7 @@ export default function MenuIndex() {
                 <DialogContent className="max-w-2xl">
                     <DialogHeader>
                         <DialogTitle className="text-2xl">{selectedItem?.name}</DialogTitle>
-                        <DialogDescription className="text-base">{selectedItem?.category.name}</DialogDescription>
+                        <DialogDescription className="text-base">{selectedItem?.category?.name}</DialogDescription>
                     </DialogHeader>
                     {selectedItem?.image_url && (
                         <div className="mb-4 aspect-video w-full overflow-hidden rounded-lg">
@@ -171,6 +178,7 @@ export default function MenuIndex() {
                     {selectedItem?.description && <p className="mb-4 text-muted-foreground">{selectedItem.description}</p>}
                     <div className="mb-4 flex items-center justify-between">
                         <span className="text-2xl font-bold">₱{formatPrice(selectedItem?.price ?? 0)}</span>
+                        {selectedItem?.availability_status === 'sold_out' && <Badge variant="destructive">Sold Out</Badge>}
                         {selectedItem?.availability_status === 'limited' && <Badge variant="secondary">Limited Availability</Badge>}
                     </div>
                     {selectedItem?.nutritional_info && Object.keys(selectedItem.nutritional_info).length > 0 && (
@@ -190,9 +198,14 @@ export default function MenuIndex() {
                         </div>
                     )}
                     <div className="mt-4 flex gap-2">
-                        {selectedItem && (
+                        {selectedItem && selectedItem.availability_status !== 'sold_out' && (
                             <Button className="flex-1" onClick={() => { addItem(selectedItem as any, 1); setIsDialogOpen(false); }}>
                                 <Plus className="mr-2 h-4 w-4" /> Add to Cart
+                            </Button>
+                        )}
+                        {selectedItem && selectedItem.availability_status === 'sold_out' && (
+                            <Button className="flex-1" disabled>
+                                Out of Stock
                             </Button>
                         )}
                     </div>

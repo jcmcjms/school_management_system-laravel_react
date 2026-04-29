@@ -3,54 +3,67 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem, type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpen, ChefHat, ClipboardList, Folder, LayoutGrid, Package, ShoppingCart, Users, Wallet, UtensilsCrossed } from 'lucide-react';
+import { ChefHat, ClipboardList, LayoutGrid, Package, Shield, ShoppingCart, Users, UtensilsCrossed, Wallet, Bell, MessageCircle, Grid3X3, CreditCard, DollarSign } from 'lucide-react';
 import AppLogo from './app-logo';
 
-function getNavItems(role: string): NavItem[] {
-    const common: NavItem[] = [
+function getNavItems(role: string, permissions: string[]): NavItem[] {
+    const has = (p: string) => permissions.includes(p);
+
+    const items: NavItem[] = [
         { title: 'Dashboard', url: '/dashboard', icon: LayoutGrid },
     ];
 
-    switch (role) {
-        case 'admin':
-        case 'manager':
-            return [
-                ...common,
-                { title: 'Menu Management', url: '/admin/menu', icon: UtensilsCrossed },
-                { title: 'Users', url: '/admin/users', icon: Users },
-                { title: 'Inventory', url: '/admin/inventory', icon: Package },
-                { title: 'Revenue', url: '/admin/revenue', icon: Wallet },
-                { title: 'Browse Menu', url: '/menu', icon: ChefHat },
-            ];
-        case 'staff':
-            return [
-                ...common,
-                { title: 'Browse Menu', url: '/menu', icon: ChefHat },
-            ];
-        case 'faculty':
-            return [
-                ...common,
-                { title: 'Browse Menu', url: '/menu', icon: ChefHat },
-                { title: 'My Orders', url: '/orders', icon: ShoppingCart },
-                { title: 'Reservations', url: '/reservations', icon: ClipboardList },
-            ];
-        case 'student':
-        case 'parent':
-            return [
-                ...common,
-                { title: 'Browse Menu', url: '/menu', icon: ChefHat },
-                { title: 'My Orders', url: '/orders', icon: ShoppingCart },
-                { title: 'Reservations', url: '/reservations', icon: ClipboardList },
-            ];
-        default:
-            return common;
+    // Admin/management links based on permissions
+    if (has('manage_menu')) {
+        items.push({ title: 'Menu Management', url: '/admin/menu', icon: UtensilsCrossed });
+        items.push({ title: 'Retail Items', url: '/admin/retail/items', icon: ShoppingCart });
+        items.push({ title: 'Quick Sell', url: '/admin/retail/quick-sell', icon: Package });
+        items.push({ title: 'Vendor Settlements', url: '/admin/retail/settlements', icon: DollarSign });
     }
+    if (has('manage_categories')) {
+        items.push({ title: 'Categories', url: '/admin/categories', icon: Grid3X3 });
+    }
+    if (has('manage_users')) {
+        items.push({ title: 'Users', url: '/admin/users', icon: Users });
+    }
+    if (has('manage_inventory')) {
+        items.push({ title: 'Inventory', url: '/admin/inventory', icon: Package });
+    }
+    if (has('view_revenue')) {
+        items.push({ title: 'Revenue', url: '/admin/revenue', icon: Wallet });
+    }
+    if (has('manage_deduction_limits')) {
+        items.push({ title: 'Salary Deductions', url: '/admin/salary-deductions', icon: CreditCard });
+    }
+    if (has('manage_roles')) {
+        items.push({ title: 'Roles & Permissions', url: '/admin/roles', icon: Shield });
+    }
+
+    // Browse menu (everyone)
+    if (has('browse_menu')) {
+        items.push({ title: 'Browse Menu', url: '/menu', icon: ChefHat });
+    }
+
+    // Ordering links
+    if (has('view_own_orders')) {
+        items.push({ title: 'My Orders', url: '/orders', icon: ShoppingCart });
+    }
+    if (has('view_own_orders')) {
+        items.push({ title: 'Reservations', url: '/reservations', icon: ClipboardList });
+    }
+
+    // Chat & Notifications (everyone)
+    items.push({ title: 'Chat', url: '/chat', icon: MessageCircle });
+    items.push({ title: 'Notifications', url: '/notifications', icon: Bell });
+
+    return items;
 }
 
 export function AppSidebar() {
     const { auth } = usePage<SharedData>().props;
     const role = (auth?.user as any)?.role || 'student';
-    const navItems = getNavItems(role);
+    const permissions: string[] = (auth as any)?.permissions || [];
+    const navItems = getNavItems(role, permissions);
 
     return (
         <Sidebar collapsible="icon" variant="inset">
@@ -76,3 +89,4 @@ export function AppSidebar() {
         </Sidebar>
     );
 }
+

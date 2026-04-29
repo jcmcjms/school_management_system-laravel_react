@@ -6,6 +6,7 @@ use App\Models\Reservation;
 use App\Models\Order;
 use App\Models\InventoryItem;
 use App\Models\InventoryTransaction;
+use App\Notifications\ReservationRedeemed;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -55,6 +56,12 @@ class ReservationController extends Controller
         if ($reservation->order) {
             $this->deductInventoryForOrder($reservation->order, $request->user());
             $reservation->order->markAsServed();
+        }
+
+        // Notify the customer
+        $reservation->load('user');
+        if ($reservation->user) {
+            $reservation->user->notify(new ReservationRedeemed($reservation));
         }
 
         return back()->with('success', "Reservation {$reservation->qr_code} redeemed successfully.");

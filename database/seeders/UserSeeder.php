@@ -29,6 +29,7 @@ class UserSeeder extends Seeder
             'employee_id' => 'EMP002',
             'department' => 'Operations',
             'position' => 'Restaurant Manager',
+            'salary_deduction_limit' => 5000.00,
             'is_active' => true,
         ]);
 
@@ -40,6 +41,7 @@ class UserSeeder extends Seeder
             'employee_id' => 'EMP003',
             'department' => 'Kitchen',
             'position' => 'Kitchen Staff',
+            'salary_deduction_limit' => 3000.00,
             'is_active' => true,
         ]);
 

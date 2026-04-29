@@ -3,13 +3,14 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Traits\HasPermissions;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use HasFactory, HasPermissions, Notifiable;
 
     public const ROLES = [
         'admin' => 'Admin',
@@ -36,6 +37,7 @@ class User extends Authenticatable
         'salary_deduction_current',
         'position',
         'phone',
+        'avatar_path',
         'is_active',
     ];
 
@@ -43,6 +45,8 @@ class User extends Authenticatable
         'password',
         'remember_token',
     ];
+
+    protected $appends = ['avatar'];
 
     protected function casts(): array
     {
@@ -53,6 +57,14 @@ class User extends Authenticatable
             'salary_deduction_limit' => 'decimal:2',
             'salary_deduction_current' => 'decimal:2',
         ];
+    }
+
+    public function getAvatarAttribute(): ?string
+    {
+        if ($this->avatar_path) {
+            return asset('storage/' . $this->avatar_path);
+        }
+        return null;
     }
 
     public function isRole(string $role): bool
@@ -88,6 +100,11 @@ class User extends Authenticatable
     public function isFaculty(): bool
     {
         return $this->role === 'faculty';
+    }
+
+    public function isEmployee(): bool
+    {
+        return in_array($this->role, ['admin', 'manager', 'staff', 'faculty']);
     }
 
     public function canAccessAdmin(): bool
@@ -137,6 +154,6 @@ class User extends Authenticatable
 
     public function canDeductSalary(float $amount): bool
     {
-        return $this->isFaculty() && $this->getRemainingDeductionLimit() >= $amount;
+        return $this->isEmployee() && $this->salary_deduction_limit > 0 && $this->getRemainingDeductionLimit() >= $amount;
     }
 }
