@@ -34,10 +34,10 @@ The School Canteen Management System digitizes the entire canteen workflow for a
 - **Smart Inventory** — Auto-deducts raw materials when orders are served, based on ingredient recipes
 - **Multi-Payment Support** — GCash, Cash (both confirmed at counter by staff), and Salary Deduction (in-app with limit enforcement for faculty)
 - **QR Code Reservations** — Students/faculty reserve meals and present auto-generated QR codes for pickup
-- **Revenue Analytics** — Payment method breakdown, faculty deduction tracking, CSV exports
+- **Revenue Analytics** — Payment method breakdown, daily trends, top selling items, faculty deduction tracking, CSV exports
 - **Real-time Notifications** — In-app alerts for orders, payments, inventory, and reservations
 - **Chat/Messaging** — Direct messaging between users within the system
-- **User Avatars** — Profile image support for all user types
+- **Retail & Vendor Management** — Manage retail items (biscuits, candies, chocolates) with external vendor settlements
 
 ---
 
@@ -55,16 +55,20 @@ The School Canteen Management System digitizes the entire canteen workflow for a
 ### 🍲 Menu Management (Admin / Manager)
 - Full CRUD for menu items and categories
 - Ingredient recipe linking (connects menu items to raw inventory materials)
-- Availability toggling and stock quantity management
+- **Availability Status Tracking** — Available, Limited (low stock), Sold Out, Hidden
+- Stock quantity management with visual indicators
 - Allergen tagging and nutritional information
 - Image URL support for menu item photos
 - Featured item flagging and sort ordering
+- **Bulk Import/Export** — CSV-based menu item import and export
+- Quick stock adjustment without editing
 
 ### 🛒 Ordering System (All Authenticated Users)
 - Browse menu with category-organized layout
 - Add-to-cart with inline quantity controls on each menu card
 - Floating cart panel and sticky checkout bar
 - Cart persistence via `localStorage`
+- **Sold Out Warning** — Users see warning banners in cart when items become unavailable
 - Payment method selection at checkout:
   - **Cash** — Pay at the counter, staff confirms
   - **GCash** — Show transfer at the counter, staff confirms
@@ -75,6 +79,7 @@ The School Canteen Management System digitizes the entire canteen workflow for a
 ### 📱 QR Code Reservations
 - Auto-generated unique QR codes on order creation (when pickup time is set)
 - QR codes displayed on order detail page using `qrcode.react`
+- **Reservation Status Workflow** — Pending → Confirmed (on payment) → Redeemed
 - Staff redemption via QR code input on the kitchen dashboard
 - Expiration tracking (2-hour default window)
 - Redemption triggers automatic inventory deduction
@@ -96,18 +101,30 @@ The School Canteen Management System digitizes the entire canteen workflow for a
 - Active alert panel with acknowledgment workflow
 - **Auto-deduction**: When an order is served, the system automatically deducts ingredient quantities from inventory based on the `menu_item_ingredients` recipe table
 
-### 👥 User Management (Admin / Manager)
-- Full CRUD with role-specific form fields:
-  - Students: Student ID, grade level, section
-  - Faculty: Employee ID, department, salary deduction limit
-  - Parents: Linked student account
-- CSV bulk import with validation and error reporting
-- Search and filter by role
-- Active/inactive status management
+### 🛒 Retail & Vendor Management (Admin / Manager)
+- **Retail Categories** — Organize items (Biscuits, Candies, Chocolates, etc.)
+- **Retail Items** — Individual products with:
+  - Stock tracking and automatic status (Available, Limited, Out of Stock)
+  - Optional vendor connection with commission percentage
+  - Quick stock adjustment modal
+- **External Vendors** — Manage external sellers who sell products in the canteen
+  - Contact information (name, phone, email, address)
+  - Active/inactive status
+  - Product count per vendor
+- **Vendor Products** — Products from external vendors with stock management
+- **Quick Sell** — Staff can sell vendor products directly
+- **End-of-Day Settlements** — Vendor payout workflow:
+  - Shows daily sales summary per vendor
+  - Calculates vendor share (e.g., 70%) and canteen share (e.g., 30%)
+  - Records remaining items to return to vendor
+  - Resets vendor product stock after settlement
 
 ### 📊 Revenue Dashboard (Admin / Manager)
 - Total revenue with order count
+- **Average order value** calculation
 - Payment method breakdown (GCash / Cash / Salary Deduction) with visual percentage bar
+- **Daily revenue trend** visualization (bar chart)
+- **Top selling items** ranking (by revenue)
 - Date range filtering
 - Recent paid orders feed
 - Faculty salary deduction usage table with progress bars and near-limit warnings
@@ -139,6 +156,15 @@ The School Canteen Management System digitizes the entire canteen workflow for a
 - Search users to start new conversations
 - Message read receipts
 
+### 👥 User Management (Admin / Manager)
+- Full CRUD with role-specific form fields:
+  - Students: Student ID, grade level, section
+  - Faculty: Employee ID, department, salary deduction limit
+  - Parents: Linked student account
+- CSV bulk import with validation and error reporting
+- Search and filter by role
+- Active/inactive status management
+
 ---
 
 ## 🛠️ Tech Stack
@@ -154,7 +180,7 @@ The School Canteen Management System digitizes the entire canteen workflow for a
 | **Icons** | Lucide React | 0.475 |
 | **QR Codes** | qrcode.react | — |
 | **Build Tool** | Vite | 6.x |
-| **Database** | PostgreSQL / SQLite | — |
+| **Database** | MySQL / PostgreSQL / SQLite | — |
 | **PHP** | PHP | ≥ 8.2 |
 
 ---
@@ -173,18 +199,19 @@ The application follows a **modular monolith** architecture pattern:
 ├─────────────────────────────────────────────────────┤
 │              Inertia.js (SSR Bridge)                 │
 ├─────────────────────────────────────────────────────┤
-│                 Laravel (PHP)                        │
+│                 Laravel (PHP)                          │
 │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌─────────┐ │
 │  │  Menu    │ │  Order   │ │  Admin   │ │ Payment │ │
 │  │  Module  │ │  Module  │ │  Module  │ │ Module  │ │
 │  └──────────┘ └──────────┘ └──────────┘ └─────────┘ │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐             │
-│  │Inventory │ │ Revenue  │ │ Reserv.  │             │
-│  │  Module  │ │  Module  │ │  Module  │             │
-│  └──────────┘ └──────────┘ └──────────┘             │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌─────────┐ │
+│  │Inventory │ │ Revenue  │ │ Retail   │ │ Vendor  │ │
+│  │  Module  │ │  Module  │ │  Module  │ │ Module  │ │
+│  └──────────┘ └──────────┘ └──────────┘ └─────────┘ │
 ├─────────────────────────────────────────────────────┤
-│          PostgreSQL / SQLite Database                 │
+│          MySQL / PostgreSQL / SQLite Database          │
 │  Users · MenuItems · Orders · Inventory · Payments   │
+│  RetailItems · Vendors · VendorSettlements           │
 └─────────────────────────────────────────────────────┘
 ```
 
@@ -196,6 +223,7 @@ The application follows a **modular monolith** architecture pattern:
 4. **Smart Redirect** — `RedirectController` dispatches authenticated users to their role-specific dashboard
 5. **Cart in LocalStorage** — Client-side cart state via custom `useCart` hook; persists across page navigations
 6. **Cashier-Confirmed Payments** — GCash and Cash are both handled at the physical counter; only salary deduction is processed in-app
+7. **Vendor Settlement Flow** — End-of-day workflow for external vendors with sales tracking, commission calculation, and stock return
 
 ---
 
@@ -207,7 +235,7 @@ The application follows a **modular monolith** architecture pattern:
 - **Composer** ≥ 2.x
 - **Node.js** ≥ 18.x
 - **npm** ≥ 9.x
-- **PostgreSQL** ≥ 14 (or SQLite for development)
+- **MySQL** ≥ 8.0 (or PostgreSQL / SQLite for development)
 
 ### Installation
 
@@ -235,12 +263,12 @@ php artisan key:generate
 touch database/database.sqlite
 ```
 
-**Option B: PostgreSQL (Recommended for Production)**
+**Option B: MySQL (Recommended for Production)**
 ```env
 # Edit .env
-DB_CONNECTION=pgsql
+DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
-DB_PORT=5432
+DB_PORT=3306
 DB_DATABASE=sms
 DB_USERNAME=your_username
 DB_PASSWORD=your_password
@@ -258,6 +286,7 @@ This creates all tables and populates sample data including:
 - 3 menu items across 2 categories
 - 8 inventory items with a supplier
 - Ingredient recipe links for auto-deduction
+- Sample retail categories and vendor data
 
 ### Start Development Server
 
@@ -300,9 +329,15 @@ erDiagram
     Order ||--o| Reservation : "may have"
     Order ||--o| Payment : "paid via"
     Order ||--o| SalaryDeduction : "deducted from"
+
+    RetailCategory ||--o{ RetailItem : contains
+    Vendor ||--o{ RetailItem : supplies
+    Vendor ||--o{ VendorProduct : sells
+    Vendor ||--o{ VendorSettlement : receives
+    VendorProduct ||--o{ VendorSale : sold
 ```
 
-### Tables (10 Migrations)
+### Tables (15+ Migrations)
 
 | Table | Description |
 |---|---|
@@ -311,17 +346,23 @@ erDiagram
 | `permissions` | Permission definitions grouped by feature area |
 | `role_permission` | Pivot table mapping roles to their granted permissions |
 | `menu_categories` | Menu sections (Main Dishes, Drinks, etc.) |
-| `menu_items` | Individual food/drink items with pricing, stock, allergens |
+| `menu_items` | Individual food/drink items with pricing, stock, availability_status |
 | `menu_item_ingredients` | Recipe links — maps menu items to inventory raw materials |
 | `orders` | Order header with totals, status, payment method |
 | `order_items` | Line items within an order |
-| `reservations` | QR-coded meal reservations with pickup times |
+| `reservations` | QR-coded meal reservations with status (pending → confirmed → redeemed) |
 | `payments` | Payment records (GCash ref, cash received, completion time) |
 | `salary_deductions` | Faculty salary deduction ledger entries |
 | `inventory_items` | Raw materials with stock levels, SKU, supplier |
 | `inventory_transactions` | Audit trail of all stock movements |
 | `inventory_alerts` | Low-stock and out-of-stock notifications |
 | `suppliers` | Supplier contact information |
+| `retail_categories` | Categories for retail items (Biscuits, Candies, etc.) |
+| `retail_items` | Retail products with optional vendor connection |
+| `vendors` | External vendors selling in the canteen |
+| `vendor_products` | Products from external vendors |
+| `vendor_sales` | Daily sales records for vendor products |
+| `vendor_settlements` | End-of-day settlement records |
 | `notifications` | User notifications (order, payment, inventory alerts) |
 | `conversations` | Chat conversation threads between users |
 | `messages` | Individual chat messages with read receipts |
@@ -337,8 +378,8 @@ The system uses a **Roles + Permissions** architecture. Each user has one role, 
 | Role | Dashboard | Can Order | Admin Panels | Kitchen |
 |---|---|---|---|---|
 | **Admin** | Overview stats | ✅ | All (superuser) | ❌ |
-| **Manager** | Overview stats | ✅ | Menu, Inventory, Revenue (not Users by default) | ❌ |
-| **Staff** | Kitchen queue | ❌ | ❌ | ✅ Order status, QR scan, payment confirm |
+| **Manager** | Overview stats | ✅ | Menu, Retail, Inventory, Revenue | ❌ |
+| **Staff** | Kitchen queue | ❌ | ❌ | ✅ Order status, QR scan, payment confirm, Quick Sell |
 | **Faculty** | Personal orders + deduction info | ✅ (+ salary deduction) | ❌ | ❌ |
 | **Student** | Personal orders | ✅ | ❌ | ❌ |
 | **Parent** | Linked student orders | ✅ | ❌ | ❌ |
@@ -367,35 +408,11 @@ The system uses a **Roles + Permissions** architecture. Each user has one role, 
 | `browse_menu` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `manage_roles` | ✅ | | | | | |
 
-### How Permissions Work
-
-```
-User (role: 'manager') → Role model → role_permission pivot → Permission checks
-```
-
-1. **Backend**: Routes use `permission:manage_menu` middleware instead of `role:admin,manager`
-2. **Frontend**: Permissions array shared via Inertia; sidebar items render based on `permissions.includes('manage_menu')`
-3. **Admin override**: Admin role always passes all permission checks (superuser in `HasPermissions` trait)
-4. **Runtime customizable**: Admins can toggle permissions per role via `/admin/roles`
-
-### Sidebar Navigation (Permission-Based)
-
-Sidebar items are dynamically rendered based on the user's permissions:
-- Dashboard link (always shown)
-- Menu Management → requires `manage_menu`
-- Users → requires `manage_users`
-- Inventory → requires `manage_inventory`
-- Revenue → requires `view_revenue`
-- Roles & Permissions → requires `manage_roles`
-- Browse Menu → requires `browse_menu`
-- My Orders → requires `view_own_orders`
-- Reservations → requires `view_own_orders`
-
 ---
 
 ## 📦 Module Breakdown
 
-### Controllers (17 total)
+### Controllers (18 total)
 
 | Controller | Routes | Permission Required |
 |---|---|---|
@@ -405,6 +422,7 @@ Sidebar items are dynamically rendered based on the user's permissions:
 | `ReservationController` | `/reservations/*` | `view_own_orders` + `redeem_reservation` |
 | `PaymentController` | Staff confirm payment | `confirm_payment` |
 | `AdminMenuController` | `/admin/menu/*` | `manage_menu`, `manage_categories` |
+| `AdminRetailController` | `/admin/retail/*` | `manage_menu` |
 | `AdminUserController` | `/admin/users/*` | `manage_users`, `import_users` |
 | `InventoryController` | `/admin/inventory/*` | `manage_inventory`, `add_inventory_stock` |
 | `RevenueController` | `/admin/revenue/*` | `view_revenue`, `export_revenue` |
@@ -417,38 +435,50 @@ Sidebar items are dynamically rendered based on the user's permissions:
 | `FacultyDashboardController` | `GET /faculty/dashboard` | (role: faculty) |
 | `CustomerDashboardController` | `GET /customer/dashboard` | (role: student, parent) |
 
-### Models (17 total)
+### Models (21 total)
 
-`User` · `Role` · `Permission` · `MenuCategory` · `MenuItem` · `MenuItemIngredient` · `Order` · `OrderItem` · `Reservation` · `Payment` · `SalaryDeduction` · `InventoryItem` · `InventoryTransaction` · `InventoryAlert` · `Supplier` · `Conversation` · `Message`
+`User` · `Role` · `Permission` · `MenuCategory` · `MenuItem` · `MenuItemIngredient` · `Order` · `OrderItem` · `Reservation` · `Payment` · `SalaryDeduction` · `InventoryItem` · `InventoryTransaction` · `InventoryAlert` · `Supplier` · `RetailCategory` · `RetailItem` · `Vendor` · `VendorProduct` · `VendorSale` · `VendorSettlement` · `Conversation` · `Message`
 
-### React Pages (15+ pages)
+### React Pages (25+ pages)
 
 ```
 resources/js/pages/
 ├── dashboard/
 │   ├── admin.tsx          # Admin/Manager overview
 │   ├── staff.tsx          # Kitchen order queue + QR scanner
-│   ├── faculty.tsx        # Faculty orders + deduction status
-│   └── customer.tsx       # Student/Parent order history
+│   ├── faculty.tsx       # Faculty orders + deduction status
+│   └── customer.tsx      # Student/Parent order history
 ├── menu/
-│   └── index.tsx          # Public menu with cart integration
+│   └── index.tsx         # Public menu with cart + sold out indicators
 ├── orders/
-│   ├── index.tsx          # Order history list
-│   ├── create.tsx         # Checkout page
-│   └── show.tsx           # Order detail with QR code
+│   ├── index.tsx        # Order history list
+│   ├── create.tsx       # Checkout page with stock warnings
+│   ├── show.tsx         # Order detail with QR code
+│   └── reservations.tsx # User's reservations
 ├── admin/
 │   ├── menu/
-│   │   ├── index.tsx      # Menu item management table
-│   │   └── form.tsx       # Create/edit menu item form
+│   │   ├── index.tsx    # Menu item management + stock adjust
+│   │   ├── form.tsx     # Create/edit menu item
+│   │   └── categories.tsx # Category management
+│   ├── retail/
+│   │   ├── items.tsx       # Retail items list
+│   │   ├── item-form.tsx   # Create/edit retail item
+│   │   ├── categories.tsx  # Retail categories
+│   │   ├── vendors.tsx    # External vendor management
+│   │   ├── vendor-products.tsx # Vendor products
+│   │   ├── vendor-product-form.tsx
+│   │   ├── quick-sell.tsx  # Staff quick sell page
+│   │   └── settlements.tsx # End-of-day vendor settlements
 │   ├── users/
-│   │   └── index.tsx      # User management + CSV import
+│   │   └── index.tsx    # User management + CSV import
 │   ├── inventory/
-│   │   └── index.tsx      # Stock levels + alerts
+│   │   └── index.tsx   # Stock levels + alerts
 │   ├── revenue/
-│   │   └── index.tsx      # Revenue dashboard + charts
+│   │   └── index.tsx   # Revenue dashboard + trends
 │   └── roles/
-│       └── index.tsx      # Role-permission matrix management
-└── auth/                  # Login, Register, Password Reset
+│       └── index.tsx   # Role-permission matrix
+├── chat/                 # Messaging system
+└── auth/                # Login, Register, Password Reset
 ```
 
 ---
@@ -458,28 +488,7 @@ resources/js/pages/
 ### Public Routes
 | Method | URI | Description |
 |---|---|---|
-| `GET` | `/menu` | Browse menu |
-| `GET` | `/menu/{menuItem}` | Menu item detail |
-
-### Notification Routes (All Authenticated)
-| Method | URI | Description |
-|---|---|---|
-| `GET` | `/notifications` | List notifications |
-| `GET` | `/api/notifications/poll` | Poll for new notifications |
-| `PATCH` | `/notifications/{id}/read` | Mark as read |
-| `POST` | `/notifications/mark-all-read` | Mark all as read |
-
-### Chat Routes (All Authenticated)
-| Method | URI | Description |
-|---|---|---|
-| `GET` | `/chat` | List conversations |
-| `GET` | `/chat/{conversation}` | View conversation |
-| `POST` | `/chat/start/{user}` | Start new conversation |
-| `POST` | `/chat/{conversation}/messages` | Send message |
-| `GET` | `/api/chat/{conversation}/poll` | Poll for new messages |
-| `GET` | `/api/chat/poll` | Poll for new conversations |
-| `POST` | `/chat/{conversation}/read` | Mark as read |
-| `GET` | `/api/chat/users` | Search users to chat with |
+| `GET` | `/menu` | Browse menu (filters out hidden/sold out) |
 
 ### Authenticated Routes (All Roles)
 | Method | URI | Description |
@@ -491,39 +500,16 @@ resources/js/pages/
 | `GET` | `/orders/{order}` | Order detail |
 | `GET` | `/reservations` | My reservations |
 
-### Permission-Gated Routes
+### Permission-Gated Routes (Key Additions)
 | Method | URI | Permission | Description |
 |---|---|---|---|
-| `GET` | `/admin/dashboard` | `view_admin_dashboard` | Admin dashboard |
-| `GET/POST` | `/admin/menu` | `manage_menu` | List / Create menu items |
-| `GET` | `/admin/menu/create` | `manage_menu` | New item form |
-| `GET/PUT` | `/admin/menu/{id}/edit` | `manage_menu` | Edit item form |
-| `DELETE` | `/admin/menu/{id}` | `manage_menu` | Delete item |
-| `PATCH` | `/admin/menu/{id}/toggle` | `manage_menu` | Toggle availability |
-| `GET/POST` | `/admin/categories` | `manage_categories` | Category management |
-| `GET/POST` | `/admin/users` | `manage_users` | List / Create users |
-| `PUT/DELETE` | `/admin/users/{id}` | `manage_users` | Update / Delete user |
-| `POST` | `/admin/users/import` | `import_users` | CSV bulk import |
-| `GET/POST` | `/admin/inventory` | `manage_inventory` | List / Create inventory |
-| `POST` | `/admin/inventory/{id}/add-stock` | `add_inventory_stock` | Add stock |
-| `PATCH` | `/admin/inventory/alerts/{id}` | `manage_inventory` | Acknowledge alert |
-| `GET` | `/admin/revenue` | `view_revenue` | Revenue dashboard |
-| `GET` | `/admin/revenue/export` | `export_revenue` | Export CSV |
-| `GET` | `/admin/roles` | `manage_roles` | Role-permission matrix |
-| `PUT` | `/admin/roles/{id}/permissions` | `manage_roles` | Update role permissions |
-| `GET` | `/staff/dashboard` | `view_kitchen` | Kitchen dashboard |
-| `PATCH` | `/staff/orders/{id}/status` | `update_order_status` | Update order status |
-| `POST` | `/staff/orders/{id}/confirm-payment` | `confirm_payment` | Confirm GCash/Cash |
-| `POST` | `/staff/reservations/redeem` | `redeem_reservation` | Redeem QR code |
-| `GET` | `/orders` | `view_own_orders` | Order history |
-| `GET/POST` | `/orders/create` | `place_order` | Checkout & place order |
-
-### Salary Deduction Routes (Admin/Manager)
-| Method | URI | Permission | Description |
-|---|---|---|---|
-| `GET` | `/admin/salary-deductions` | `manage_deduction_limits` | List all faculty deductions |
-| `GET` | `/admin/salary-deductions/{user}` | `manage_deduction_limits` | Faculty deduction details |
-| `PATCH` | `/admin/salary-deductions/{user}/limit` | `manage_deduction_limits` | Update deduction limit |
+| `GET/POST` | `/admin/menu/export` | `manage_menu` | Export menu CSV |
+| `POST` | `/admin/menu/import` | `manage_menu` | Import menu CSV |
+| `GET` | `/admin/retail/items` | `manage_menu` | Retail items list |
+| `GET` | `/admin/retail/quick-sell` | `manage_menu` | Staff quick sell |
+| `GET` | `/admin/retail/settlements` | `manage_menu` | Vendor settlements |
+| `POST` | `/admin/retail/settlements` | `manage_menu` | Create settlement |
+| `POST` | `/admin/retail/vendor-sales` | `manage_menu` | Record vendor sale |
 
 ---
 
@@ -533,30 +519,31 @@ resources/js/pages/
 sms/
 ├── app/
 │   ├── Http/
-│   │   ├── Controllers/       # 17 controllers + Auth/Settings
+│   │   ├── Controllers/       # 18 controllers
 │   │   └── Middleware/
-│   │       ├── RoleMiddleware.php       # Role-based dashboard routing
-│   │       └── PermissionMiddleware.php # Granular permission checks
-│   ├── Models/                # 17 Eloquent models (incl. Role, Permission, Conversation, Message)
+│   │       ├── RoleMiddleware.php
+│   │       └── PermissionMiddleware.php
+│   ├── Models/                # 21 Eloquent models
 │   ├── Traits/
-│   │   └── HasPermissions.php  # Permission checking trait for User model
-│   └── Notifications/        # Notification classes (6 types)
+│   │   └── HasPermissions.php
+│   ├── Notifications/        # Notification classes
+│   └── Console/Commands/    # Custom artisan commands
 ├── database/
-│   ├── migrations/            # 13 migration files
-│   ├── seeders/               # RolePermission, User, Menu, Inventory seeders
+│   ├── migrations/            # 15+ migration files
+│   ├── seeders/               # RolePermission, User, Menu, Inventory, Retail seeders
 │   └── factories/
 ├── resources/js/
 │   ├── components/            # Reusable UI (sidebar, nav, shadcn/ui)
 │   ├── hooks/
-│   │   └── use-cart.ts        # Cart state management
+│   │   └── use-cart.ts       # Cart state management
 │   ├── layouts/               # App layout with sidebar
-│   ├── pages/                 # All Inertia page components
+│   ├── pages/                 # All Inertia page components (25+)
 │   └── types/
 │       └── index.ts           # Full TypeScript interfaces
 ├── routes/
 │   ├── web.php                # All routes (permission-gated)
 │   ├── auth.php               # Authentication routes
-│   └── settings.php           # User settings routes
+│   └── settings.php          # User settings routes
 └── public/build/              # Compiled production assets
 ```
 
@@ -581,6 +568,11 @@ After running `php artisan migrate:fresh --seed`, the following test data is ava
 - **Main Dishes**: Chicken Adobo (₱120), Pork Sinigang (₱150)
 - **Drinks**: Iced Lemon Tea (₱45)
 
+### Retail Items (Sample)
+- **Biscuits**: Cream Crackers, Skyflakes
+- **Candies**: Peppermint, Mints
+- **Chocolates**: Chocolate Bar
+
 ### Inventory
 - 8 raw materials: Rice, Chicken, Pork Belly, Soy Sauce, Vinegar, Cooking Oil, Tea Leaves, Tamarind Mix
 - 1 Supplier: Fresh Market Supplies
@@ -591,7 +583,7 @@ After running `php artisan migrate:fresh --seed`, the following test data is ava
 
 ### Roles & Permissions
 - 6 system roles with `is_system = true` (cannot be deleted)
-- 19 permissions grouped by feature area (dashboard, menu, users, inventory, revenue, kitchen, ordering, general, system)
+- 19 permissions grouped by feature area
 - Default permission matrix pre-configured as shown in the Permissions section above
 
 ---
@@ -618,6 +610,7 @@ npm run lint               # Lint with ESLint
 # Database
 php artisan migrate:fresh --seed    # Reset & reseed
 php artisan tinker                  # Interactive REPL
+php artisan menu:fix-status        # Fix menu availability status
 ```
 
 ### Adding a New Feature
@@ -638,6 +631,7 @@ php artisan tinker                  # Interactive REPL
 - **Validation**: Server-side validation in controllers; errors auto-propagated to frontend via Inertia
 - **Flash Messages**: `back()->with('success', '...')` for success notifications
 - **Currency**: Philippine Peso (₱) — all monetary values stored as `decimal(10,2)`
+- **CSV Format**: All imports/exports use standard CSV format with headers in first row
 
 ---
 
