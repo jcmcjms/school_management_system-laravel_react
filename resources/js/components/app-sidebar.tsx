@@ -16,13 +16,22 @@ function getNavGroups(role: string, permissions: string[]): NavGroup[] {
 
     const groups: NavGroup[] = [];
 
-    // Dashboard (always first)
-    groups.push({
-        title: 'Overview',
-        items: [
-            { title: 'Dashboard', url: '/dashboard', icon: LayoutGrid },
-        ],
-    });
+    // If librarian, show Library Dashboard, otherwise show main Dashboard
+    if (isLibrarian) {
+        groups.push({
+            title: 'Overview',
+            items: [
+                { title: 'Dashboard', url: '/library', icon: BookOpen },
+            ],
+        });
+    } else {
+        groups.push({
+            title: 'Overview',
+            items: [
+                { title: 'Dashboard', url: '/dashboard', icon: LayoutGrid },
+            ],
+        });
+    }
 
     // Canteen / Food Service
     if (has('browse_menu') || isManager || isAdmin) {
@@ -49,9 +58,8 @@ function getNavGroups(role: string, permissions: string[]): NavGroup[] {
     if (has('view_library') || isLibrarian) {
         const libraryItems = [];
         
-        // Librarians get full access
+        // Librarians get full access (no Dashboard - already in Overview)
         if (isLibrarian) {
-            libraryItems.push({ title: 'Dashboard', url: '/library', icon: BookOpen });
             libraryItems.push({ title: 'Books', url: '/library/books', icon: BookOpen });
             libraryItems.push({ title: 'Borrowings', url: '/library/borrowings', icon: ClipboardList });
             libraryItems.push({ title: 'Fines', url: '/library/fines', icon: DollarSign });
@@ -103,10 +111,17 @@ function getNavGroups(role: string, permissions: string[]): NavGroup[] {
 }
 
 function NavGroupAccordion({ group, defaultOpen }: { group: NavGroup; defaultOpen?: boolean }) {
-    const [isOpen, setIsOpen] = useState(defaultOpen ?? true);
     const page = usePage();
     const url = page.url;
-    const hasActiveItem = group.items.some(item => url.startsWith(item.url));
+    
+    // Check if any item URL matches the current page URL
+    const hasActiveItem = group.items.some(item => url === item.url || url.startsWith(item.url + '/'));
+    
+    // Always call useState - initialize based on whether there's an active item
+    const [isOpen, setIsOpen] = useState(() => {
+        if (hasActiveItem) return true;
+        return defaultOpen ?? true;
+    });
 
     return (
         <SidebarGroup>
@@ -124,16 +139,19 @@ function NavGroupAccordion({ group, defaultOpen }: { group: NavGroup; defaultOpe
             </SidebarMenuButton>
             {isOpen && (
                 <SidebarMenu>
-                    {group.items.map((item) => (
+                    {group.items.map((item) => {
+                        const isActive = url === item.url || url.startsWith(item.url + '/');
+                        return (
                         <SidebarMenuItem key={item.title}>
-                            <SidebarMenuButton asChild isActive={url === item.url}>
+                            <SidebarMenuButton asChild isActive={isActive}>
                                 <Link href={item.url} prefetch>
                                     {item.icon && <item.icon className="h-4 w-4" />}
                                     <span>{item.title}</span>
                                 </Link>
                             </SidebarMenuButton>
                         </SidebarMenuItem>
-                    ))}
+                        );
+                    })}
                 </SidebarMenu>
             )}
         </SidebarGroup>

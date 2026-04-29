@@ -36,17 +36,6 @@ class LibraryController extends Controller
             'overdue_borrowings' => LibraryBorrowing::where('status', 'overdue')->count(),
         ];
 
-        $recentBorrowings = LibraryBorrowing::with(['book', 'user'])
-            ->latest()
-            ->limit(10)
-            ->get();
-
-        $recentReturns = LibraryBorrowing::whereNotNull('returned_at')
-            ->with(['book', 'user'])
-            ->latest('returned_at')
-            ->limit(10)
-            ->get();
-
         $recentReturns = LibraryBorrowing::whereNotNull('returned_at')
             ->with(['book', 'user'])
             ->latest('returned_at')

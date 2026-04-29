@@ -19,6 +19,7 @@ class RedirectController extends Controller
         return match ($user->role) {
             'admin', 'manager' => redirect()->route('admin.dashboard'),
             'staff'            => redirect()->route('staff.dashboard'),
+            'librarian'       => redirect()->route('library.index'),
             'student', 'parent' => redirect()->route('customer.dashboard'),
             'faculty'          => redirect()->route('faculty.dashboard'),
             default            => redirect()->route('menu'),
