@@ -46,18 +46,25 @@ function getNavGroups(role: string, permissions: string[]): NavGroup[] {
     }
 
     // Library
-    if (has('view_library')) {
-        const libraryItems = [
-            { title: 'Library', url: '/library', icon: BookOpen },
-        ];
+    if (has('view_library') || isLibrarian) {
+        const libraryItems = [];
+        
+        // Librarians get full access
         if (isLibrarian) {
+            libraryItems.push({ title: 'Dashboard', url: '/library', icon: BookOpen });
             libraryItems.push({ title: 'Books', url: '/library/books', icon: BookOpen });
             libraryItems.push({ title: 'Borrowings', url: '/library/borrowings', icon: ClipboardList });
             libraryItems.push({ title: 'Fines', url: '/library/fines', icon: DollarSign });
             libraryItems.push({ title: 'Categories', url: '/library/categories', icon: Grid3X3 });
             libraryItems.push({ title: 'Reports', url: '/library/reports', icon: BarChart3 });
+        } else {
+            // Regular users just see library
+            libraryItems.push({ title: 'Library', url: '/library', icon: BookOpen });
         }
-        groups.push({ title: 'Library', items: libraryItems });
+        
+        if (libraryItems.length > 0) {
+            groups.push({ title: 'Library', items: libraryItems });
+        }
     }
 
     // Admin & Management
