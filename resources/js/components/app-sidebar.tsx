@@ -1,81 +1,143 @@
-import { NavMain } from '@/components/nav-main';
-import { NavUser } from '@/components/nav-user';
-import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
-import { type NavItem, type SharedData } from '@/types';
+import { useState } from 'react';
+import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarGroup } from '@/components/ui/sidebar';
+import { type NavGroup, type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { ChefHat, ClipboardList, LayoutGrid, Package, Shield, ShoppingCart, Users, UtensilsCrossed, Wallet, Bell, MessageCircle, Grid3X3, CreditCard, DollarSign, BookOpen, Coins, FolderTree, BarChart3 } from 'lucide-react';
+import { ChevronDown, ChevronRight, LayoutGrid, BookOpen, UtensilsCrossed, Wallet, Package, Users, Shield, ClipboardList, ShoppingCart, CreditCard, MessageCircle, Bell, DollarSign, Grid3X3, ShoppingBag, UsersRound, BarChart3 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import AppLogo from './app-logo';
+import { UserInfo } from '@/components/user-info';
+import { ChevronsUpDown } from 'lucide-react';
 
-function getNavItems(role: string, permissions: string[]): NavItem[] {
+function getNavGroups(role: string, permissions: string[]): NavGroup[] {
     const has = (p: string) => permissions.includes(p);
+    const isAdmin = role === 'admin';
+    const isLibrarian = role === 'librarian' || has('manage_library');
+    const isManager = role === 'manager' || has('manage_menu');
 
-    const items: NavItem[] = [
-        { title: 'Dashboard', url: '/dashboard', icon: LayoutGrid },
-    ];
+    const groups: NavGroup[] = [];
 
-    // Admin/management links based on permissions
-    if (has('manage_menu')) {
-        items.push({ title: 'Menu Management', url: '/admin/menu', icon: UtensilsCrossed });
-        items.push({ title: 'Retail Items', url: '/admin/retail/items', icon: ShoppingCart });
-        items.push({ title: 'Quick Sell', url: '/admin/retail/quick-sell', icon: Package });
-        items.push({ title: 'Vendor Settlements', url: '/admin/retail/settlements', icon: DollarSign });
-    }
-    if (has('manage_categories')) {
-        items.push({ title: 'Categories', url: '/admin/categories', icon: Grid3X3 });
-    }
-    if (has('manage_users')) {
-        items.push({ title: 'Users', url: '/admin/users', icon: Users });
-    }
-    if (has('manage_inventory')) {
-        items.push({ title: 'Inventory', url: '/admin/inventory', icon: Package });
-    }
-    if (has('view_revenue')) {
-        items.push({ title: 'Revenue', url: '/admin/revenue', icon: Wallet });
-    }
-    if (has('manage_deduction_limits')) {
-        items.push({ title: 'Salary Deductions', url: '/admin/salary-deductions', icon: CreditCard });
-    }
-    if (has('manage_roles')) {
-        items.push({ title: 'Roles & Permissions', url: '/admin/roles', icon: Shield });
-    }
+    // Dashboard (always first)
+    groups.push({
+        title: 'Overview',
+        items: [
+            { title: 'Dashboard', url: '/dashboard', icon: LayoutGrid },
+        ],
+    });
 
-    // Browse menu (everyone)
-    if (has('browse_menu')) {
-        items.push({ title: 'Browse Menu', url: '/menu', icon: ChefHat });
-    }
-
-    // Ordering links
-    if (has('view_own_orders')) {
-        items.push({ title: 'My Orders', url: '/orders', icon: ShoppingCart });
-    }
-    if (has('view_own_orders')) {
-        items.push({ title: 'Reservations', url: '/reservations', icon: ClipboardList });
+    // Canteen / Food Service
+    if (has('browse_menu') || isManager || isAdmin) {
+        const canteenItems = [
+            { title: 'Browse Menu', url: '/menu', icon: ShoppingBag },
+        ];
+        if (has('view_own_orders')) {
+            canteenItems.push({ title: 'My Orders', url: '/orders', icon: ShoppingCart });
+            canteenItems.push({ title: 'Reservations', url: '/reservations', icon: ClipboardList });
+        }
+        if (has('manage_menu')) {
+            canteenItems.push({ title: 'Menu Management', url: '/admin/menu', icon: UtensilsCrossed });
+            canteenItems.push({ title: 'Retail Items', url: '/admin/retail/items', icon: Package });
+            canteenItems.push({ title: 'Quick Sell', url: '/admin/retail/quick-sell', icon: Package });
+            canteenItems.push({ title: 'Settlements', url: '/admin/retail/settlements', icon: DollarSign });
+        }
+        if (has('manage_categories')) {
+            canteenItems.push({ title: 'Categories', url: '/admin/categories', icon: Grid3X3 });
+        }
+        groups.push({ title: 'Canteen', items: canteenItems });
     }
 
-    // Chat & Notifications (everyone)
-    items.push({ title: 'Chat', url: '/chat', icon: MessageCircle });
-    items.push({ title: 'Notifications', url: '/notifications', icon: Bell });
-
-    // Library module
-    if (has('manage_library') || role === 'librarian') {
-        items.push({ title: 'Library', url: '/library', icon: BookOpen });
-        items.push({ title: 'Library Books', url: '/library/books', icon: BookOpen });
-        items.push({ title: 'Borrowings', url: '/library/borrowings', icon: ClipboardList });
-        items.push({ title: 'Fines', url: '/library/fines', icon: Coins });
-        items.push({ title: 'Categories', url: '/library/categories', icon: FolderTree });
-        items.push({ title: 'Reports', url: '/library/reports', icon: BarChart3 });
-    } else if (has('view_library') || role === 'student' || role === 'faculty') {
-        items.push({ title: 'Library', url: '/library', icon: BookOpen });
+    // Library
+    if (has('view_library')) {
+        const libraryItems = [
+            { title: 'Library', url: '/library', icon: BookOpen },
+        ];
+        if (isLibrarian) {
+            libraryItems.push({ title: 'Books', url: '/library/books', icon: BookOpen });
+            libraryItems.push({ title: 'Borrowings', url: '/library/borrowings', icon: ClipboardList });
+            libraryItems.push({ title: 'Fines', url: '/library/fines', icon: DollarSign });
+            libraryItems.push({ title: 'Categories', url: '/library/categories', icon: Grid3X3 });
+            libraryItems.push({ title: 'Reports', url: '/library/reports', icon: BarChart3 });
+        }
+        groups.push({ title: 'Library', items: libraryItems });
     }
 
-    return items;
+    // Admin & Management
+    if (isAdmin || has('manage_inventory') || has('manage_users') || has('view_revenue') || has('manage_deduction_limits')) {
+        const adminItems: typeof groups[0]['items'] = [];
+        if (has('manage_users')) {
+            adminItems.push({ title: 'Users', url: '/admin/users', icon: UsersRound });
+        }
+        if (has('manage_inventory')) {
+            adminItems.push({ title: 'Inventory', url: '/admin/inventory', icon: Package });
+        }
+        if (has('view_revenue')) {
+            adminItems.push({ title: 'Revenue', url: '/admin/revenue', icon: Wallet });
+        }
+        if (has('manage_deduction_limits')) {
+            adminItems.push({ title: 'Salary Deductions', url: '/admin/salary-deductions', icon: CreditCard });
+        }
+        if (isAdmin) {
+            adminItems.push({ title: 'Roles & Permissions', url: '/admin/roles', icon: Shield });
+        }
+        if (adminItems.length > 0) {
+            groups.push({ title: 'Administration', items: adminItems });
+        }
+    }
+
+    // Communication
+    groups.push({
+        title: 'Communication',
+        items: [
+            { title: 'Chat', url: '/chat', icon: MessageCircle },
+            { title: 'Notifications', url: '/notifications', icon: Bell },
+        ],
+    });
+
+    return groups;
+}
+
+function NavGroupAccordion({ group, defaultOpen }: { group: NavGroup; defaultOpen?: boolean }) {
+    const [isOpen, setIsOpen] = useState(defaultOpen ?? true);
+    const page = usePage();
+    const url = page.url;
+    const hasActiveItem = group.items.some(item => url.startsWith(item.url));
+
+    return (
+        <SidebarGroup>
+            <SidebarMenuButton
+                onClick={() => setIsOpen(!isOpen)}
+                className={cn(
+                    "mb-1 hover:bg-sidebar-accent cursor-pointer",
+                    hasActiveItem && "bg-sidebar-accent"
+                )}
+            >
+                {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                <span className="font-semibold text-xs uppercase tracking-wider text-sidebar-foreground/70">
+                    {group.title}
+                </span>
+            </SidebarMenuButton>
+            {isOpen && (
+                <SidebarMenu>
+                    {group.items.map((item) => (
+                        <SidebarMenuItem key={item.title}>
+                            <SidebarMenuButton asChild isActive={url === item.url}>
+                                <Link href={item.url} prefetch>
+                                    {item.icon && <item.icon className="h-4 w-4" />}
+                                    <span>{item.title}</span>
+                                </Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                    ))}
+                </SidebarMenu>
+            )}
+        </SidebarGroup>
+    );
 }
 
 export function AppSidebar() {
     const { auth } = usePage<SharedData>().props;
     const role = (auth?.user as any)?.role || 'student';
     const permissions: string[] = (auth as any)?.permissions || [];
-    const navItems = getNavItems(role, permissions);
+    const navGroups = getNavGroups(role, permissions);
 
     return (
         <Sidebar collapsible="icon" variant="inset">
@@ -92,13 +154,28 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                <NavMain items={navItems} />
+                {navGroups.map((group, index) => (
+                    <NavGroupAccordion 
+                        key={group.title} 
+                        group={group} 
+                        defaultOpen={index < 2}
+                    />
+                ))}
             </SidebarContent>
 
             <SidebarFooter>
-                <NavUser />
+                <SidebarMenu>
+                    <SidebarMenuItem>
+                        <SidebarMenuButton
+                            size="lg"
+                            className="text-sidebar-accent-foreground data-[state=open]:bg-sidebar-accent group"
+                        >
+                            <UserInfo user={auth.user} />
+                            <ChevronsUpDown className="ml-auto size-4" />
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                </SidebarMenu>
             </SidebarFooter>
         </Sidebar>
     );
 }
-
