@@ -86,7 +86,9 @@ class MenuItem extends Model
 
     public function updateAvailabilityStatus(): void
     {
-        if ($this->isSoldOut()) {
+        if (!$this->is_available) {
+            $this->availability_status = 'hidden';
+        } elseif ($this->isSoldOut()) {
             $this->availability_status = 'sold_out';
         } elseif ($this->isLowStock()) {
             $this->availability_status = 'limited';
@@ -103,7 +105,6 @@ class MenuItem extends Model
         }
 
         $this->available_quantity -= $quantity;
-        $this->reserved_quantity += $quantity;
         $this->save();
         $this->updateAvailabilityStatus();
 
@@ -112,8 +113,6 @@ class MenuItem extends Model
 
     public function confirmReservation(): void
     {
-        $this->reserved_quantity -= 1;
-        $this->save();
         $this->updateAvailabilityStatus();
     }
 }

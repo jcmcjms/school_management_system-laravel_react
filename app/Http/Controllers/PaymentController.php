@@ -53,6 +53,11 @@ class PaymentController extends Controller
 
         $order->markAsPaid();
 
+        // Confirm the reservation when payment is verified
+        if ($order->reservation) {
+            $order->reservation->update(['status' => 'confirmed']);
+        }
+
         // Notify the customer
         $order->load('user');
         if ($order->user) {

@@ -61,6 +61,7 @@ export interface MenuCategory {
     sort_order: number;
     is_active: boolean;
     menu_items?: MenuItem[];
+    menu_items_count?: number;
     created_at: string;
     updated_at: string;
 }

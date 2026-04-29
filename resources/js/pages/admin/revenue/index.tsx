@@ -1,24 +1,32 @@
 import { Head, router, usePage } from '@inertiajs/react';
-import { Download, Wallet, AlertTriangle } from 'lucide-react';
+import { Download, Wallet, AlertTriangle, TrendingUp, ShoppingBag } from 'lucide-react';
 import { useState } from 'react';
 
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 
-interface RevenueData { total: number; gcash: number; cash: number; salary_deduction: number; order_count: number }
+interface RevenueData { total: number; gcash: number; cash: number; salary_deduction: number; order_count: number; average_order: number }
 interface FacultyDeduction { id: number; name: string; employee_id: string | null; department: string | null; limit: number; used: number; remaining: number; percentage: number; near_limit: boolean }
 interface RecentOrder { id: number; order_number: string; total: number; payment_method: string; created_at: string; user: { name: string } }
-interface RevenueProps { revenue: RevenueData; recentOrders: RecentOrder[]; facultyDeductions: FacultyDeduction[]; filters: { start_date: string; end_date: string } }
+interface TopItem { id: number; name: string; total_qty: number; total_revenue: number }
+interface DailyRevenue { date: string; daily_total: number; order_count: number }
+interface RevenueProps { revenue: RevenueData; recentOrders: RecentOrder[]; facultyDeductions: FacultyDeduction[]; topItems: TopItem[]; dailyRevenue: DailyRevenue[]; filters: { start_date: string; end_date: string } }
 
 const formatPrice = (p: number | string) => Number(p).toFixed(2);
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Dashboard', href: '/admin/dashboard' }, { title: 'Revenue', href: '/admin/revenue' }];
 
 export default function AdminRevenue() {
-    const { revenue, recentOrders, facultyDeductions, filters } = usePage<RevenueProps>().props;
+    const { revenue, recentOrders, facultyDeductions, topItems, dailyRevenue, filters } = usePage<RevenueProps>().props;
     const [startDate, setStartDate] = useState(filters.start_date);
     const [endDate, setEndDate] = useState(filters.end_date);
 
     const handleFilter = () => router.get('/admin/revenue', { start_date: startDate, end_date: endDate }, { preserveState: true });
+
+    const safeDailyRevenue = (dailyRevenue as DailyRevenue[]) || [];
+    const safeTopItems = (topItems as TopItem[]) || [];
+    const safeFacultyDeductions = (facultyDeductions as FacultyDeduction[]) || [];
+
+    const maxDaily = Math.max(...safeDailyRevenue.map(d => d.daily_total), 1);
 
     const gcashPct = revenue.total > 0 ? (revenue.gcash / revenue.total) * 100 : 0;
     const cashPct = revenue.total > 0 ? (revenue.cash / revenue.total) * 100 : 0;
@@ -43,11 +51,16 @@ export default function AdminRevenue() {
                 </div>
 
                 {/* Revenue Cards */}
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
                     <div className="rounded-lg border bg-card p-6 shadow-sm">
                         <p className="text-sm font-medium text-muted-foreground">Total Revenue</p>
                         <p className="text-3xl font-bold">₱{formatPrice(revenue.total)}</p>
                         <p className="text-xs text-muted-foreground">{revenue.order_count} orders</p>
+                    </div>
+                    <div className="rounded-lg border bg-card p-6 shadow-sm">
+                        <p className="text-sm font-medium text-muted-foreground">Avg Order</p>
+                        <p className="text-3xl font-bold">₱{formatPrice(revenue.average_order)}</p>
+                        <p className="text-xs text-muted-foreground">per order</p>
                     </div>
                     <div className="rounded-lg border bg-card p-6 shadow-sm">
                         <p className="text-sm font-medium text-blue-600">GCash</p>
@@ -81,6 +94,54 @@ export default function AdminRevenue() {
                     </div>
                 </div>
 
+                {/* Daily Revenue Trend */}
+                <div className="rounded-lg border bg-card p-6 shadow-sm">
+                    <h2 className="mb-4 text-xl font-semibold flex items-center gap-2">
+                        <TrendingUp className="h-5 w-5" /> Daily Revenue Trend
+                    </h2>
+                    {safeDailyRevenue.length === 0 ? (
+                        <p className="text-muted-foreground">No data for this period</p>
+                    ) : (
+                        <div className="flex items-end gap-1 h-40">
+                            {safeDailyRevenue.map((day, i) => (
+                                <div key={i} className="flex-1 flex flex-col items-center">
+                                    <div className="w-full bg-primary rounded-t" style={{ height: `${(day.daily_total / maxDaily) * 100}%`, minHeight: day.daily_total > 0 ? '4px' : '0' }} title={`₱${formatPrice(day.daily_total)}`} />
+                                    <p className="text-[10px] text-muted-foreground mt-1 truncate w-full text-center">
+                                        {new Date(day.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                    </p>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
+                {/* Top Selling Items */}
+                <div className="rounded-lg border bg-card p-6 shadow-sm">
+                    <h2 className="mb-4 text-xl font-semibold flex items-center gap-2">
+                        <ShoppingBag className="h-5 w-5" /> Top Selling Items
+                    </h2>
+                    {safeTopItems.length === 0 ? (
+                        <p className="text-muted-foreground">No sales data for this period</p>
+                    ) : (
+                        <div className="space-y-2">
+                            {safeTopItems.map((item, i) => (
+                                <div key={item.id} className="flex items-center justify-between border-b pb-2 last:border-0">
+                                    <div className="flex items-center gap-3">
+                                        <span className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${i < 3 ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
+                                            {i + 1}
+                                        </span>
+                                        <span className="font-medium">{item.name}</span>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="font-medium">₱{formatPrice(item.total_revenue)}</p>
+                                        <p className="text-xs text-muted-foreground">{item.total_qty} sold</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
                 <div className="grid gap-6 lg:grid-cols-2">
                     {/* Recent Orders */}
                     <div className="rounded-lg border bg-card p-6 shadow-sm">
@@ -100,9 +161,9 @@ export default function AdminRevenue() {
                     {/* Faculty Deductions */}
                     <div className="rounded-lg border bg-card p-6 shadow-sm">
                         <h2 className="mb-4 text-xl font-semibold">Faculty Salary Deductions</h2>
-                        {facultyDeductions.length === 0 ? <p className="text-muted-foreground">No faculty users</p> : (
+                        {safeFacultyDeductions.length === 0 ? <p className="text-muted-foreground">No faculty users</p> : (
                             <div className="space-y-3">
-                                {(facultyDeductions as FacultyDeduction[]).map((f) => (
+                                {safeFacultyDeductions.map((f) => (
                                     <div key={f.id} className={`rounded-md border p-3 ${f.near_limit ? 'border-red-500 bg-red-50 dark:bg-red-950/30' : ''}`}>
                                         <div className="flex items-center justify-between mb-1">
                                             <div>

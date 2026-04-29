@@ -109,6 +109,11 @@ class StaffDashboardController extends Controller
                     ]);
                 }
                 $order->markAsPaid();
+
+                // Confirm the reservation when payment is auto-confirmed
+                if ($order->reservation) {
+                    $order->reservation->update(['status' => 'confirmed']);
+                }
             }
         }
 

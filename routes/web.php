@@ -3,6 +3,7 @@
 use App\Http\Controllers\MenuController;
 use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\AdminMenuController;
+use App\Http\Controllers\AdminRetailController;
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\StaffDashboardController;
 use App\Http\Controllers\FacultyDashboardController;
@@ -61,6 +62,8 @@ Route::middleware(['auth', 'permission:manage_menu'])->group(function () {
     Route::put('admin/menu/{menuItem}', [AdminMenuController::class, 'update'])->name('admin.menu.update');
     Route::delete('admin/menu/{menuItem}', [AdminMenuController::class, 'destroy'])->name('admin.menu.destroy');
     Route::patch('admin/menu/{menuItem}/toggle', [AdminMenuController::class, 'toggleAvailability'])->name('admin.menu.toggle');
+    Route::get('admin/menu/export', [AdminMenuController::class, 'export'])->name('admin.menu.export');
+    Route::post('admin/menu/import', [AdminMenuController::class, 'import'])->name('admin.menu.import');
 });
 
 // ── Category Management ─────────────────────────────────────────────
@@ -103,6 +106,45 @@ Route::middleware(['auth', 'permission:view_revenue'])->group(function () {
 
 Route::middleware(['auth', 'permission:export_revenue'])->group(function () {
     Route::get('admin/revenue/export', [RevenueController::class, 'export'])->name('admin.revenue.export');
+});
+
+// ── Retail & Vendor Management ───────────────────────────────────────
+Route::middleware(['auth', 'permission:manage_menu'])->group(function () {
+    // Retail Categories
+    Route::get('admin/retail/categories', [AdminRetailController::class, 'categories'])->name('admin.retail.categories');
+    Route::post('admin/retail/categories', [AdminRetailController::class, 'storeCategory'])->name('admin.retail.categories.store');
+    Route::put('admin/retail/categories/{category}', [AdminRetailController::class, 'updateCategory'])->name('admin.retail.categories.update');
+    Route::delete('admin/retail/categories/{category}', [AdminRetailController::class, 'destroyCategory'])->name('admin.retail.categories.destroy');
+
+    // Retail Items
+    Route::get('admin/retail/items', [AdminRetailController::class, 'items'])->name('admin.retail.items');
+    Route::get('admin/retail/items/create', [AdminRetailController::class, 'createItem'])->name('admin.retail.items.create');
+    Route::post('admin/retail/items', [AdminRetailController::class, 'storeItem'])->name('admin.retail.items.store');
+    Route::get('admin/retail/items/{item}/edit', [AdminRetailController::class, 'editItem'])->name('admin.retail.items.edit');
+    Route::put('admin/retail/items/{item}', [AdminRetailController::class, 'updateItem'])->name('admin.retail.items.update');
+    Route::delete('admin/retail/items/{item}', [AdminRetailController::class, 'destroyItem'])->name('admin.retail.items.destroy');
+    Route::patch('admin/retail/items/{item}/stock', [AdminRetailController::class, 'adjustStock'])->name('admin.retail.items.stock');
+
+    // Vendors
+    Route::get('admin/retail/vendors', [AdminRetailController::class, 'vendors'])->name('admin.retail.vendors');
+    Route::post('admin/retail/vendors', [AdminRetailController::class, 'storeVendor'])->name('admin.retail.vendors.store');
+    Route::put('admin/retail/vendors/{vendor}', [AdminRetailController::class, 'updateVendor'])->name('admin.retail.vendors.update');
+    Route::delete('admin/retail/vendors/{vendor}', [AdminRetailController::class, 'destroyVendor'])->name('admin.retail.vendors.destroy');
+
+    // Vendor Products
+    Route::get('admin/retail/vendor-products', [AdminRetailController::class, 'vendorProducts'])->name('admin.retail.vendor-products');
+    Route::get('admin/retail/vendor-products/create', [AdminRetailController::class, 'createVendorProduct'])->name('admin.retail.vendor-products.create');
+    Route::post('admin/retail/vendor-products', [AdminRetailController::class, 'storeVendorProduct'])->name('admin.retail.vendor-products.store');
+    Route::put('admin/retail/vendor-products/{product}', [AdminRetailController::class, 'updateVendorProduct'])->name('admin.retail.vendor-products.update');
+    Route::delete('admin/retail/vendor-products/{product}', [AdminRetailController::class, 'destroyVendorProduct'])->name('admin.retail.vendor-products.destroy');
+
+    // Quick Sell
+    Route::get('admin/retail/quick-sell', [AdminRetailController::class, 'quickSell'])->name('admin.retail.quick-sell');
+
+    // Vendor Settlements
+    Route::get('admin/retail/settlements', [AdminRetailController::class, 'settlements'])->name('admin.retail.settlements');
+    Route::post('admin/retail/settlements', [AdminRetailController::class, 'createSettlement'])->name('admin.retail.settlements.create');
+    Route::post('admin/retail/vendor-sales', [AdminRetailController::class, 'recordVendorSale'])->name('admin.retail.vendor-sales.record');
 });
 
 // ── Roles & Permissions Management ──────────────────────────────────

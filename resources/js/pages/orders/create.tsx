@@ -1,7 +1,8 @@
 import { Head, router, usePage } from '@inertiajs/react';
-import { Minus, Plus, ShoppingCart, Trash2, ArrowLeft } from 'lucide-react';
+import { Minus, Plus, ShoppingCart, Trash2, ArrowLeft, AlertTriangle } from 'lucide-react';
 import { useState } from 'react';
 
+import { Badge } from '@/components/ui/badge';
 import { useCart } from '@/hooks/use-cart';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem, type UserRole } from '@/types';
@@ -35,6 +36,9 @@ export default function CreateOrder() {
 
     const canUseSalaryDeduction = !!deductionInfo && deductionInfo.limit > 0;
     const deductionInsufficient = canUseSalaryDeduction && deductionInfo && total > deductionInfo.remaining;
+
+    const hasSoldOutItem = items.some((item) => item.menuItem.availability_status === 'sold_out');
+    const hasLimitedItem = items.some((item) => item.menuItem.availability_status === 'limited');
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -82,6 +86,20 @@ export default function CreateOrder() {
             <div className="flex flex-1 flex-col gap-6 p-6">
                 <h1 className="text-3xl font-bold tracking-tight">Place Your Order</h1>
 
+                {hasSoldOutItem && (
+                    <div className="flex items-center gap-3 rounded-lg border border-red-300 bg-red-50 p-4 text-red-800 dark:border-red-800 dark:bg-red-950 dark:text-red-200">
+                        <AlertTriangle className="h-5 w-5 shrink-0" />
+                        <p className="text-sm font-medium">Some items in your cart are no longer available. Please remove them before placing your order.</p>
+                    </div>
+                )}
+
+                {hasLimitedItem && !hasSoldOutItem && (
+                    <div className="flex items-center gap-3 rounded-lg border border-yellow-300 bg-yellow-50 p-4 text-yellow-800 dark:border-yellow-800 dark:bg-yellow-950 dark:text-yellow-200">
+                        <AlertTriangle className="h-5 w-5 shrink-0" />
+                        <p className="text-sm font-medium">Some items are running low on stock. We recommend ordering soon to ensure availability.</p>
+                    </div>
+                )}
+
                 <form onSubmit={handleSubmit}>
                     <div className="grid gap-6 lg:grid-cols-3">
                         {/* Cart Items */}
@@ -89,24 +107,32 @@ export default function CreateOrder() {
                             <div className="rounded-lg border bg-card p-6 shadow-sm">
                                 <h2 className="mb-4 text-xl font-semibold">Order Items</h2>
                                 <div className="space-y-4">
-                                    {items.map((item) => (
-                                        <div key={item.menuItem.id} className="flex items-center justify-between rounded-md border p-4">
-                                            <div className="flex-1">
-                                                <p className="font-medium">{item.menuItem.name}</p>
-                                                <p className="text-sm text-muted-foreground">₱{formatPrice(item.menuItem.price)} each</p>
+                                    {items.map((item) => {
+                                        const isSoldOut = item.menuItem.availability_status === 'sold_out';
+                                        const isLimited = item.menuItem.availability_status === 'limited';
+                                        return (
+                                            <div key={item.menuItem.id} className={`flex items-center justify-between rounded-md border p-4 ${isSoldOut ? 'border-red-300 bg-red-50 dark:border-red-800 dark:bg-red-950' : ''}`}>
+                                                <div className="flex-1">
+                                                    <div className="flex items-center gap-2">
+                                                        <p className="font-medium">{item.menuItem.name}</p>
+                                                        {isSoldOut && <Badge variant="destructive" className="text-xs">Sold Out</Badge>}
+                                                        {isLimited && <Badge variant="secondary" className="text-xs">Limited</Badge>}
+                                                    </div>
+                                                    <p className="text-sm text-muted-foreground">₱{formatPrice(item.menuItem.price)} each</p>
+                                                </div>
+                                                <div className="flex items-center gap-3">
+                                                    <button type="button" onClick={() => updateQuantity(item.menuItem.id, item.quantity - 1)}
+                                                        className="rounded-md border p-1 hover:bg-accent" disabled={isSoldOut}><Minus className="h-4 w-4" /></button>
+                                                    <span className="w-8 text-center font-medium">{item.quantity}</span>
+                                                    <button type="button" onClick={() => updateQuantity(item.menuItem.id, item.quantity + 1)}
+                                                        className="rounded-md border p-1 hover:bg-accent" disabled={isSoldOut}><Plus className="h-4 w-4" /></button>
+                                                    <span className="w-20 text-right font-medium">₱{formatPrice(Number(item.menuItem.price) * item.quantity)}</span>
+                                                    <button type="button" onClick={() => removeItem(item.menuItem.id)}
+                                                        className="rounded-md p-1 text-red-500 hover:bg-red-50 dark:hover:bg-red-950"><Trash2 className="h-4 w-4" /></button>
+                                                </div>
                                             </div>
-                                            <div className="flex items-center gap-3">
-                                                <button type="button" onClick={() => updateQuantity(item.menuItem.id, item.quantity - 1)}
-                                                    className="rounded-md border p-1 hover:bg-accent"><Minus className="h-4 w-4" /></button>
-                                                <span className="w-8 text-center font-medium">{item.quantity}</span>
-                                                <button type="button" onClick={() => updateQuantity(item.menuItem.id, item.quantity + 1)}
-                                                    className="rounded-md border p-1 hover:bg-accent"><Plus className="h-4 w-4" /></button>
-                                                <span className="w-20 text-right font-medium">₱{formatPrice(Number(item.menuItem.price) * item.quantity)}</span>
-                                                <button type="button" onClick={() => removeItem(item.menuItem.id)}
-                                                    className="rounded-md p-1 text-red-500 hover:bg-red-50 dark:hover:bg-red-950"><Trash2 className="h-4 w-4" /></button>
-                                            </div>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                                 {errors.items && <p className="mt-2 text-sm text-red-600">{errors.items}</p>}
                             </div>
@@ -168,9 +194,9 @@ export default function CreateOrder() {
                                     className="w-full rounded-md border bg-background px-3 py-2 text-sm" />
                             </div>
 
-                            <button type="submit" disabled={processing || !pickupTime || (paymentMethod === 'salary_deduction' && !!deductionInsufficient)}
+                            <button type="submit" disabled={processing || !pickupTime || (paymentMethod === 'salary_deduction' && !!deductionInsufficient) || hasSoldOutItem}
                                 className="w-full rounded-md bg-primary py-3 text-lg font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50">
-                                {processing ? 'Processing...' : `Place Order — ₱${formatPrice(total)}`}
+                                {hasSoldOutItem ? 'Remove Sold Out Items' : processing ? 'Processing...' : `Place Order — ₱${formatPrice(total)}`}
                             </button>
                         </div>
                     </div>

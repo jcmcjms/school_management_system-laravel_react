@@ -51,14 +51,38 @@ class RevenueController extends Controller
                 ];
             })->sortByDesc('percentage')->values();
 
+        // Top selling items
+        $topItems = \DB::table('order_items')
+            ->join('menu_items', 'order_items.menu_item_id', '=', 'menu_items.id')
+            ->join('orders', 'order_items.order_id', '=', 'orders.id')
+            ->whereBetween('orders.created_at', [$startDate, $endDate])
+            ->where('orders.payment_status', 'paid')
+            ->select('menu_items.id', 'menu_items.name', \DB::raw('SUM(order_items.quantity) as total_qty'), \DB::raw('SUM(order_items.subtotal) as total_revenue'))
+            ->groupBy('menu_items.id', 'menu_items.name')
+            ->orderByDesc('total_revenue')
+            ->limit(10)
+            ->get();
+
+        // Daily revenue for trend
+        $dailyRevenue = \DB::table('orders')
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->where('payment_status', 'paid')
+            ->select(\DB::raw('DATE(created_at) as date'), \DB::raw('SUM(total) as daily_total'), \DB::raw('COUNT(*) as order_count'))
+            ->groupBy('date')
+            ->orderBy('date')
+            ->get();
+
         return Inertia::render('admin/revenue/index', [
             'revenue' => [
                 'total' => $gcashTotal + $cashTotal + $deductionTotal,
                 'gcash' => $gcashTotal, 'cash' => $cashTotal, 'salary_deduction' => $deductionTotal,
                 'order_count' => $orders->count(),
+                'average_order' => $orders->count() > 0 ? ($gcashTotal + $cashTotal + $deductionTotal) / $orders->count() : 0,
             ],
             'recentOrders' => $recentOrders,
             'employeeDeductions' => $employeeUsers,
+            'topItems' => $topItems,
+            'dailyRevenue' => $dailyRevenue,
             'filters' => [
                 'start_date' => $startDate->toDateString(),
                 'end_date' => $endDate->toDateString(),

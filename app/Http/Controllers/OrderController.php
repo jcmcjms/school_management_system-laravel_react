@@ -156,6 +156,14 @@ class OrderController extends Controller
                 ]);
 
                 $order->markAsPaid();
+
+                // Confirm the reservation when payment is processed
+                if ($request->pickup_time) {
+                    $reservation = Reservation::where('order_id', $order->id)->first();
+                    if ($reservation) {
+                        $reservation->update(['status' => 'confirmed']);
+                    }
+                }
             }
 
             // Create reservation if pickup time is set

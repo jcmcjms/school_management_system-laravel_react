@@ -3,7 +3,7 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem, type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { ChefHat, ClipboardList, LayoutGrid, Package, Shield, ShoppingCart, Users, UtensilsCrossed, Wallet, Bell, MessageCircle, Grid3X3, CreditCard } from 'lucide-react';
+import { ChefHat, ClipboardList, LayoutGrid, Package, Shield, ShoppingCart, Users, UtensilsCrossed, Wallet, Bell, MessageCircle, Grid3X3, CreditCard, DollarSign } from 'lucide-react';
 import AppLogo from './app-logo';
 
 function getNavItems(role: string, permissions: string[]): NavItem[] {
@@ -16,6 +16,9 @@ function getNavItems(role: string, permissions: string[]): NavItem[] {
     // Admin/management links based on permissions
     if (has('manage_menu')) {
         items.push({ title: 'Menu Management', url: '/admin/menu', icon: UtensilsCrossed });
+        items.push({ title: 'Retail Items', url: '/admin/retail/items', icon: ShoppingCart });
+        items.push({ title: 'Quick Sell', url: '/admin/retail/quick-sell', icon: Package });
+        items.push({ title: 'Vendor Settlements', url: '/admin/retail/settlements', icon: DollarSign });
     }
     if (has('manage_categories')) {
         items.push({ title: 'Categories', url: '/admin/categories', icon: Grid3X3 });
