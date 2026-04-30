@@ -1,5 +1,5 @@
 import { Head, router, usePage } from '@inertiajs/react';
-import { Plus, Pencil, Trash2, GripVertical } from 'lucide-react';
+import { GripVertical, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
 import AppLayout from '@/layouts/app-layout';
@@ -65,11 +65,17 @@ export default function AdminCategories() {
 
         if (editingCategory?.id) {
             router.put(`/admin/categories/${editingCategory.id}`, data, {
-                onFinish: () => { setProcessing(false); setShowForm(false); },
+                onFinish: () => {
+                    setProcessing(false);
+                    setShowForm(false);
+                },
             });
         } else {
             router.post('/admin/categories', data, {
-                onFinish: () => { setProcessing(false); setShowForm(false); },
+                onFinish: () => {
+                    setProcessing(false);
+                    setShowForm(false);
+                },
             });
         }
     };
@@ -93,18 +99,20 @@ export default function AdminCategories() {
                         <h1 className="text-3xl font-bold tracking-tight">Category Management</h1>
                         <p className="text-muted-foreground">Organize your menu items into categories</p>
                     </div>
-                    <button onClick={openCreate}
-                        className="inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+                    <button
+                        onClick={openCreate}
+                        className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex items-center rounded-md px-4 py-2 text-sm font-medium"
+                    >
                         <Plus className="mr-2 h-4 w-4" /> Add Category
                     </button>
                 </div>
 
                 {/* Categories Table */}
-                <div className="rounded-lg border bg-card shadow-sm overflow-hidden">
+                <div className="bg-card overflow-hidden rounded-lg border shadow-sm">
                     <table className="w-full text-sm">
-                        <thead className="border-b bg-muted/50">
+                        <thead className="bg-muted/50 border-b">
                             <tr>
-                                <th className="px-4 py-3 text-left font-medium w-16">Order</th>
+                                <th className="w-16 px-4 py-3 text-left font-medium">Order</th>
                                 <th className="px-4 py-3 text-left font-medium">Name</th>
                                 <th className="px-4 py-3 text-left font-medium">Description</th>
                                 <th className="px-4 py-3 text-center font-medium">Items</th>
@@ -114,30 +122,32 @@ export default function AdminCategories() {
                         </thead>
                         <tbody>
                             {categories.map((cat) => (
-                                <tr key={cat.id} className="border-b last:border-0 hover:bg-muted/30">
-                                    <td className="px-4 py-3 text-muted-foreground">
+                                <tr key={cat.id} className="hover:bg-muted/30 border-b last:border-0">
+                                    <td className="text-muted-foreground px-4 py-3">
                                         <GripVertical className="h-4 w-4 cursor-grab" />
                                     </td>
                                     <td className="px-4 py-3 font-medium">{cat.name}</td>
-                                    <td className="px-4 py-3 text-muted-foreground">{cat.description || '—'}</td>
+                                    <td className="text-muted-foreground px-4 py-3">{cat.description || '—'}</td>
                                     <td className="px-4 py-3 text-center">
-                                        <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs">
+                                        <span className="bg-muted inline-flex items-center rounded-full px-2 py-0.5 text-xs">
                                             {cat.menu_items_count || 0}
                                         </span>
                                     </td>
                                     <td className="px-4 py-3 text-center">
-                                        <button onClick={() => toggleActive(cat)}
+                                        <button
+                                            onClick={() => toggleActive(cat)}
                                             className={`rounded-full px-2 py-0.5 text-xs font-medium ${
                                                 cat.is_active
                                                     ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
                                                     : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
-                                            }`}>
+                                            }`}
+                                        >
                                             {cat.is_active ? 'Active' : 'Inactive'}
                                         </button>
                                     </td>
                                     <td className="px-4 py-3 text-right">
                                         <div className="flex items-center justify-end gap-1">
-                                            <button onClick={() => openEdit(cat)} className="rounded p-1 hover:bg-accent">
+                                            <button onClick={() => openEdit(cat)} className="hover:bg-accent rounded p-1">
                                                 <Pencil className="h-4 w-4" />
                                             </button>
                                             <button onClick={() => handleDelete(cat)} className="rounded p-1 hover:bg-red-50 dark:hover:bg-red-950">
@@ -149,7 +159,7 @@ export default function AdminCategories() {
                             ))}
                             {categories.length === 0 && (
                                 <tr>
-                                    <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
+                                    <td colSpan={6} className="text-muted-foreground px-4 py-8 text-center">
                                         No categories yet. Create one to get started.
                                     </td>
                                 </tr>
@@ -161,17 +171,15 @@ export default function AdminCategories() {
                 {/* Create/Edit Modal */}
                 {showForm && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowForm(false)}>
-                        <div className="w-full max-w-md rounded-lg bg-card p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
-                            <h2 className="mb-4 text-xl font-semibold">
-                                {editingCategory ? 'Edit Category' : 'New Category'}
-                            </h2>
+                        <div className="bg-card w-full max-w-md rounded-lg p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+                            <h2 className="mb-4 text-xl font-semibold">{editingCategory ? 'Edit Category' : 'New Category'}</h2>
                             <form onSubmit={handleSubmit} className="space-y-4">
                                 <div>
                                     <label className="mb-1 block text-sm font-medium">Name *</label>
                                     <input
                                         value={form.name}
                                         onChange={(e) => setForm({ ...form, name: e.target.value })}
-                                        className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+                                        className="bg-background w-full rounded-md border px-3 py-2 text-sm"
                                         required
                                     />
                                 </div>
@@ -180,7 +188,7 @@ export default function AdminCategories() {
                                     <textarea
                                         value={form.description}
                                         onChange={(e) => setForm({ ...form, description: e.target.value })}
-                                        className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+                                        className="bg-background w-full rounded-md border px-3 py-2 text-sm"
                                         rows={2}
                                     />
                                 </div>
@@ -191,10 +199,10 @@ export default function AdminCategories() {
                                         min="0"
                                         value={form.sort_order}
                                         onChange={(e) => setForm({ ...form, sort_order: parseInt(e.target.value) || 0 })}
-                                        className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+                                        className="bg-background w-full rounded-md border px-3 py-2 text-sm"
                                     />
                                 </div>
-                                <label className="flex items-center gap-2 cursor-pointer">
+                                <label className="flex cursor-pointer items-center gap-2">
                                     <input
                                         type="checkbox"
                                         checked={form.is_active}
@@ -204,12 +212,18 @@ export default function AdminCategories() {
                                     <span className="text-sm">Active</span>
                                 </label>
                                 <div className="flex gap-2 pt-2">
-                                    <button type="button" onClick={() => setShowForm(false)}
-                                        className="flex-1 rounded-md border py-2 text-sm hover:bg-accent">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowForm(false)}
+                                        className="hover:bg-accent flex-1 rounded-md border py-2 text-sm"
+                                    >
                                         Cancel
                                     </button>
-                                    <button type="submit" disabled={processing}
-                                        className="flex-1 rounded-md bg-primary py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50">
+                                    <button
+                                        type="submit"
+                                        disabled={processing}
+                                        className="bg-primary text-primary-foreground hover:bg-primary/90 flex-1 rounded-md py-2 text-sm font-medium disabled:opacity-50"
+                                    >
                                         {processing ? 'Saving...' : editingCategory ? 'Update' : 'Create'}
                                     </button>
                                 </div>

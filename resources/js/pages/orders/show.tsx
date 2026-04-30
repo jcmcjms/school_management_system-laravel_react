@@ -1,7 +1,7 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
+import { ArrowLeft, Ban, CheckCircle, Clock, XCircle } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
-import { ArrowLeft, CheckCircle, Clock, XCircle, Ban } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem, type Order } from '@/types';
@@ -12,7 +12,8 @@ interface OrderShowProps {
 }
 
 const formatPrice = (price: number | string): string => Number(price).toFixed(2);
-const formatDate = (d: string): string => new Date(d).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+const formatDate = (d: string): string =>
+    new Date(d).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
 const statusColors: Record<string, string> = {
     pending: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
@@ -55,9 +56,16 @@ export default function OrderShow() {
 
     const handleCancel = () => {
         setCancelling(true);
-        router.patch(`/orders/${order.id}/cancel`, {}, {
-            onFinish: () => { setCancelling(false); setShowCancelConfirm(false); },
-        });
+        router.patch(
+            `/orders/${order.id}/cancel`,
+            {},
+            {
+                onFinish: () => {
+                    setCancelling(false);
+                    setShowCancelConfirm(false);
+                },
+            },
+        );
     };
 
     return (
@@ -74,21 +82,19 @@ export default function OrderShow() {
 
                 {/* Header */}
                 <div className="flex items-center gap-4">
-                    <Link href="/orders" className="rounded-md border p-2 hover:bg-accent">
+                    <Link href="/orders" className="hover:bg-accent rounded-md border p-2">
                         <ArrowLeft className="h-4 w-4" />
                     </Link>
                     <div>
                         <h1 className="text-3xl font-bold tracking-tight">{order.order_number}</h1>
                         <p className="text-muted-foreground">{formatDate(order.created_at)}</p>
                     </div>
-                    <span className={`ml-auto rounded-full px-3 py-1 text-sm font-medium ${statusColors[order.status] || ''}`}>
-                        {order.status}
-                    </span>
+                    <span className={`ml-auto rounded-full px-3 py-1 text-sm font-medium ${statusColors[order.status] || ''}`}>{order.status}</span>
                 </div>
 
                 {/* Status Timeline (non-cancelled orders) */}
                 {order.status !== 'cancelled' && (
-                    <div className="rounded-lg border bg-card p-6 shadow-sm">
+                    <div className="bg-card rounded-lg border p-6 shadow-sm">
                         <h2 className="mb-4 text-lg font-semibold">Order Progress</h2>
                         <div className="flex items-center justify-between">
                             {statusTimeline.map((step, i) => {
@@ -97,13 +103,20 @@ export default function OrderShow() {
                                 return (
                                     <div key={step} className="flex flex-1 items-center">
                                         <div className="flex flex-col items-center">
-                                            <div className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${
-                                                isCurrent ? 'bg-primary text-primary-foreground ring-4 ring-primary/20' :
-                                                isActive ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
-                                            }`}>
+                                            <div
+                                                className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${
+                                                    isCurrent
+                                                        ? 'bg-primary text-primary-foreground ring-primary/20 ring-4'
+                                                        : isActive
+                                                          ? 'bg-primary text-primary-foreground'
+                                                          : 'bg-muted text-muted-foreground'
+                                                }`}
+                                            >
                                                 {isActive ? '✓' : i + 1}
                                             </div>
-                                            <span className={`mt-2 text-xs capitalize ${isCurrent ? 'font-bold text-primary' : isActive ? 'text-foreground' : 'text-muted-foreground'}`}>
+                                            <span
+                                                className={`mt-2 text-xs capitalize ${isCurrent ? 'text-primary font-bold' : isActive ? 'text-foreground' : 'text-muted-foreground'}`}
+                                            >
                                                 {step}
                                             </span>
                                         </div>
@@ -129,28 +142,31 @@ export default function OrderShow() {
                 )}
 
                 <div className="grid gap-6 lg:grid-cols-3">
-                    <div className="lg:col-span-2 space-y-4">
+                    <div className="space-y-4 lg:col-span-2">
                         {/* Items */}
-                        <div className="rounded-lg border bg-card p-6 shadow-sm">
+                        <div className="bg-card rounded-lg border p-6 shadow-sm">
                             <h2 className="mb-4 text-xl font-semibold">Order Items</h2>
                             <div className="space-y-3">
                                 {order.items?.map((item) => (
                                     <div key={item.id} className="flex items-center justify-between border-b pb-3 last:border-0">
                                         <div>
                                             <p className="font-medium">{item.menuItem?.name || item.menu_item?.name}</p>
-                                            <p className="text-sm text-muted-foreground">{item.quantity} × ₱{formatPrice(item.unit_price)}</p>
+                                            <p className="text-muted-foreground text-sm">
+                                                {item.quantity} × ₱{formatPrice(item.unit_price)}
+                                            </p>
                                         </div>
                                         <p className="font-medium">₱{formatPrice(item.subtotal)}</p>
                                     </div>
                                 ))}
                             </div>
-                            <div className="mt-4 border-t pt-4 flex justify-between text-lg font-bold">
-                                <span>Total</span><span>₱{formatPrice(order.total)}</span>
+                            <div className="mt-4 flex justify-between border-t pt-4 text-lg font-bold">
+                                <span>Total</span>
+                                <span>₱{formatPrice(order.total)}</span>
                             </div>
                         </div>
 
                         {/* Payment Info */}
-                        <div className="rounded-lg border bg-card p-6 shadow-sm">
+                        <div className="bg-card rounded-lg border p-6 shadow-sm">
                             <h2 className="mb-4 text-xl font-semibold">Payment</h2>
                             <div className="space-y-2">
                                 <div className="flex justify-between">
@@ -174,7 +190,7 @@ export default function OrderShow() {
 
                         {/* Cancel Order */}
                         {canCancel && (
-                            <div className="rounded-lg border border-red-200 bg-card p-6 shadow-sm dark:border-red-800">
+                            <div className="bg-card rounded-lg border border-red-200 p-6 shadow-sm dark:border-red-800">
                                 {!showCancelConfirm ? (
                                     <button
                                         onClick={() => setShowCancelConfirm(true)}
@@ -184,8 +200,10 @@ export default function OrderShow() {
                                     </button>
                                 ) : (
                                     <div className="space-y-3">
-                                        <p className="text-sm font-medium text-red-800 dark:text-red-200">Are you sure you want to cancel this order?</p>
-                                        <p className="text-xs text-muted-foreground">This action cannot be undone. Stock will be restored.</p>
+                                        <p className="text-sm font-medium text-red-800 dark:text-red-200">
+                                            Are you sure you want to cancel this order?
+                                        </p>
+                                        <p className="text-muted-foreground text-xs">This action cannot be undone. Stock will be restored.</p>
                                         <div className="flex gap-2">
                                             <button
                                                 onClick={handleCancel}
@@ -196,7 +214,7 @@ export default function OrderShow() {
                                             </button>
                                             <button
                                                 onClick={() => setShowCancelConfirm(false)}
-                                                className="flex-1 rounded-md border px-4 py-2 text-sm font-medium hover:bg-accent"
+                                                className="hover:bg-accent flex-1 rounded-md border px-4 py-2 text-sm font-medium"
                                             >
                                                 Keep Order
                                             </button>
@@ -210,28 +228,26 @@ export default function OrderShow() {
                     {/* QR Code & Reservation */}
                     <div className="space-y-4">
                         {order.reservation && (
-                            <div className="rounded-lg border bg-card p-6 shadow-sm text-center">
+                            <div className="bg-card rounded-lg border p-6 text-center shadow-sm">
                                 <h2 className="mb-4 text-xl font-semibold">Your QR Code</h2>
                                 <div className="inline-block rounded-lg bg-white p-4">
                                     <QRCodeSVG value={order.reservation.qr_code} size={200} level="H" />
                                 </div>
-                                <p className="mt-3 font-mono text-sm text-muted-foreground">{order.reservation.qr_code}</p>
-                                <p className="mt-2 text-sm text-muted-foreground">
-                                    Pickup: {order.reservation.reserved_pickup_time}
-                                </p>
-                                <div className={`mt-2 inline-block rounded-full px-3 py-1 text-xs font-medium ${statusColors[order.reservation.status] || 'bg-gray-100'}`}>
+                                <p className="text-muted-foreground mt-3 font-mono text-sm">{order.reservation.qr_code}</p>
+                                <p className="text-muted-foreground mt-2 text-sm">Pickup: {order.reservation.reserved_pickup_time}</p>
+                                <div
+                                    className={`mt-2 inline-block rounded-full px-3 py-1 text-xs font-medium ${statusColors[order.reservation.status] || 'bg-gray-100'}`}
+                                >
                                     {order.reservation.status}
                                 </div>
                                 {order.reservation.status === 'pending' && (
-                                    <p className="mt-3 text-xs text-muted-foreground">
-                                        Show this QR code to staff at the pickup counter
-                                    </p>
+                                    <p className="text-muted-foreground mt-3 text-xs">Show this QR code to staff at the pickup counter</p>
                                 )}
                             </div>
                         )}
 
                         {order.notes && (
-                            <div className="rounded-lg border bg-card p-6 shadow-sm">
+                            <div className="bg-card rounded-lg border p-6 shadow-sm">
                                 <h2 className="mb-2 text-xl font-semibold">Notes</h2>
                                 <p className="text-muted-foreground">{order.notes}</p>
                             </div>

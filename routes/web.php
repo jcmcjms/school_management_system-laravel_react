@@ -18,6 +18,7 @@ use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\SalaryDeductionController;
+use App\Http\Controllers\LibraryController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => redirect()->route('login'))->name('home');
@@ -185,6 +186,34 @@ Route::middleware(['auth', 'role:faculty'])->group(function () {
 // ── Customer Dashboard (role-based — dashboard routing) ─────────────
 Route::middleware(['auth', 'role:student,parent'])->group(function () {
     Route::get('customer/dashboard', [CustomerDashboardController::class, 'index'])->name('customer.dashboard');
+});
+
+// ── Library Module ─────────────────────────────────────────────────────
+Route::middleware(['auth', 'role:librarian'])->group(function () {
+    Route::get('library', [LibraryController::class, 'index'])->name('library.index');
+    Route::get('library/books', [LibraryController::class, 'booksIndex'])->name('library.books.index');
+    Route::post('library/books', [LibraryController::class, 'booksStore'])->name('library.books.store');
+    Route::put('library/books/{book}', [LibraryController::class, 'booksUpdate'])->name('library.books.update');
+    Route::delete('library/books/{book}', [LibraryController::class, 'booksDestroy'])->name('library.books.destroy');
+    Route::get('library/borrowings', [LibraryController::class, 'borrowingsIndex'])->name('library.borrowings.index');
+    Route::patch('library/borrowings/{borrowing}/status', [LibraryController::class, 'updateBorrowingStatus'])->name('library.borrowings.update-status');
+    Route::get('library/fines', [LibraryController::class, 'finesIndex'])->name('library.fines.index');
+    Route::patch('library/fines/{fine}/pay', [LibraryController::class, 'payFine'])->name('library.fines.pay');
+    Route::patch('library/fines/{fine}/waive', [LibraryController::class, 'waiveFine'])->name('library.fines.waive');
+    Route::get('library/categories', [LibraryController::class, 'categoriesIndex'])->name('library.categories.index');
+    Route::post('library/categories', [LibraryController::class, 'categoriesStore'])->name('library.categories.store');
+    Route::put('library/categories/{category}', [LibraryController::class, 'categoriesUpdate'])->name('library.categories.update');
+    Route::delete('library/categories/{category}', [LibraryController::class, 'categoriesDestroy'])->name('library.categories.destroy');
+    Route::get('library/reports', [LibraryController::class, 'reports'])->name('library.reports');
+});
+
+Route::middleware(['auth', 'permission:view_library'])->group(function () {
+    Route::get('library', [LibraryController::class, 'index'])->name('library.index');
+    Route::post('library/borrow', [LibraryController::class, 'borrow'])->name('library.borrow');
+    Route::post('library/return', [LibraryController::class, 'return'])->name('library.return');
+    Route::post('library/reserve', [LibraryController::class, 'reserve'])->name('library.reserve');
+    Route::delete('library/reservations/{reservation}', [LibraryController::class, 'cancelReservation'])->name('library.reservations.cancel');
+    Route::patch('library/fines/{fine}/pay', [LibraryController::class, 'payFine'])->name('library.user-fines.pay');
 });
 
 // ── Shared Authenticated Routes (permission-gated) ──────────────────

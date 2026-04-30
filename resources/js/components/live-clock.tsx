@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Clock, Coffee, Utensils, Sun, Sunset, Moon } from 'lucide-react';
+import { Clock, Coffee, Moon, Sun, Sunset, Utensils } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 interface MealPeriod {
     name: string;
@@ -10,29 +10,54 @@ interface MealPeriod {
 
 const MEAL_SCHEDULE: { start: number; end: number; period: MealPeriod }[] = [
     {
-        start: 6 * 60,       // 6:00 AM
-        end: 8 * 60,         // 8:00 AM
-        period: { name: 'Breakfast', icon: <Coffee className="h-4 w-4" />, color: 'text-amber-700 dark:text-amber-400', bgColor: 'bg-amber-100 dark:bg-amber-900/40 border-amber-200 dark:border-amber-800' },
+        start: 6 * 60, // 6:00 AM
+        end: 8 * 60, // 8:00 AM
+        period: {
+            name: 'Breakfast',
+            icon: <Coffee className="h-4 w-4" />,
+            color: 'text-amber-700 dark:text-amber-400',
+            bgColor: 'bg-amber-100 dark:bg-amber-900/40 border-amber-200 dark:border-amber-800',
+        },
     },
     {
-        start: 9 * 60 + 30,  // 9:30 AM
-        end: 10 * 60,        // 10:00 AM
-        period: { name: 'Morning Recess', icon: <Sun className="h-4 w-4" />, color: 'text-orange-700 dark:text-orange-400', bgColor: 'bg-orange-100 dark:bg-orange-900/40 border-orange-200 dark:border-orange-800' },
+        start: 9 * 60 + 30, // 9:30 AM
+        end: 10 * 60, // 10:00 AM
+        period: {
+            name: 'Morning Recess',
+            icon: <Sun className="h-4 w-4" />,
+            color: 'text-orange-700 dark:text-orange-400',
+            bgColor: 'bg-orange-100 dark:bg-orange-900/40 border-orange-200 dark:border-orange-800',
+        },
     },
     {
         start: 11 * 60 + 30, // 11:30 AM
-        end: 13 * 60,        // 1:00 PM
-        period: { name: 'Lunch', icon: <Utensils className="h-4 w-4" />, color: 'text-green-700 dark:text-green-400', bgColor: 'bg-green-100 dark:bg-green-900/40 border-green-200 dark:border-green-800' },
+        end: 13 * 60, // 1:00 PM
+        period: {
+            name: 'Lunch',
+            icon: <Utensils className="h-4 w-4" />,
+            color: 'text-green-700 dark:text-green-400',
+            bgColor: 'bg-green-100 dark:bg-green-900/40 border-green-200 dark:border-green-800',
+        },
     },
     {
         start: 14 * 60 + 30, // 2:30 PM
-        end: 15 * 60,        // 3:00 PM
-        period: { name: 'Afternoon Recess', icon: <Sunset className="h-4 w-4" />, color: 'text-purple-700 dark:text-purple-400', bgColor: 'bg-purple-100 dark:bg-purple-900/40 border-purple-200 dark:border-purple-800' },
+        end: 15 * 60, // 3:00 PM
+        period: {
+            name: 'Afternoon Recess',
+            icon: <Sunset className="h-4 w-4" />,
+            color: 'text-purple-700 dark:text-purple-400',
+            bgColor: 'bg-purple-100 dark:bg-purple-900/40 border-purple-200 dark:border-purple-800',
+        },
     },
     {
-        start: 17 * 60,      // 5:00 PM
-        end: 19 * 60,        // 7:00 PM
-        period: { name: 'Dinner', icon: <Moon className="h-4 w-4" />, color: 'text-indigo-700 dark:text-indigo-400', bgColor: 'bg-indigo-100 dark:bg-indigo-900/40 border-indigo-200 dark:border-indigo-800' },
+        start: 17 * 60, // 5:00 PM
+        end: 19 * 60, // 7:00 PM
+        period: {
+            name: 'Dinner',
+            icon: <Moon className="h-4 w-4" />,
+            color: 'text-indigo-700 dark:text-indigo-400',
+            bgColor: 'bg-indigo-100 dark:bg-indigo-900/40 border-indigo-200 dark:border-indigo-800',
+        },
     },
 ];
 
@@ -75,20 +100,20 @@ export function LiveClock() {
     const nextPeriod = !currentPeriod ? getNextMealPeriod(now) : null;
 
     return (
-        <div className="flex flex-wrap items-center gap-3 rounded-lg border bg-card p-4 shadow-sm">
+        <div className="bg-card flex flex-wrap items-center gap-3 rounded-lg border p-4 shadow-sm">
             {/* Clock */}
             <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                    <Clock className="h-5 w-5 text-primary" />
+                <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-full">
+                    <Clock className="text-primary h-5 w-5" />
                 </div>
                 <div>
-                    <p className="text-2xl font-bold tabular-nums tracking-tight">{timeStr}</p>
-                    <p className="text-sm text-muted-foreground">{dateStr}</p>
+                    <p className="text-2xl font-bold tracking-tight tabular-nums">{timeStr}</p>
+                    <p className="text-muted-foreground text-sm">{dateStr}</p>
                 </div>
             </div>
 
             {/* Divider */}
-            <div className="hidden h-12 w-px bg-border sm:block" />
+            <div className="bg-border hidden h-12 w-px sm:block" />
 
             {/* Meal Period */}
             <div className="flex items-center gap-2">
@@ -105,17 +130,17 @@ export function LiveClock() {
                         </span>
                     </div>
                 ) : nextPeriod ? (
-                    <div className="flex items-center gap-2 rounded-full border border-border px-4 py-2">
+                    <div className="border-border flex items-center gap-2 rounded-full border px-4 py-2">
                         <span className="text-muted-foreground">{nextPeriod.period.icon}</span>
                         <div>
-                            <p className="text-sm font-medium text-muted-foreground">Next: {nextPeriod.period.name}</p>
-                            <p className="text-xs text-muted-foreground/70">Starts in {nextPeriod.startsIn}</p>
+                            <p className="text-muted-foreground text-sm font-medium">Next: {nextPeriod.period.name}</p>
+                            <p className="text-muted-foreground/70 text-xs">Starts in {nextPeriod.startsIn}</p>
                         </div>
                     </div>
                 ) : (
-                    <div className="flex items-center gap-2 rounded-full border border-border px-4 py-2">
-                        <Moon className="h-4 w-4 text-muted-foreground" />
-                        <p className="text-sm font-medium text-muted-foreground">Canteen closed</p>
+                    <div className="border-border flex items-center gap-2 rounded-full border px-4 py-2">
+                        <Moon className="text-muted-foreground h-4 w-4" />
+                        <p className="text-muted-foreground text-sm font-medium">Canteen closed</p>
                     </div>
                 )}
             </div>

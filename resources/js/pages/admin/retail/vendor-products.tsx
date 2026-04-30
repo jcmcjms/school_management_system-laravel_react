@@ -1,5 +1,5 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { Plus, Search, Edit, Trash2, Package } from 'lucide-react';
+import { Edit, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
 import AppLayout from '@/layouts/app-layout';
@@ -55,23 +55,39 @@ export default function VendorProducts() {
                         <p className="text-muted-foreground">Products from external vendors</p>
                     </div>
                     <div className="flex gap-2">
-                        <Link href="/admin/retail/vendors" className="rounded-md border px-4 py-2 text-sm hover:bg-accent">Manage Vendors</Link>
-                        <Link href="/admin/retail/vendor-products/create" className="inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground">
+                        <Link href="/admin/retail/vendors" className="hover:bg-accent rounded-md border px-4 py-2 text-sm">
+                            Manage Vendors
+                        </Link>
+                        <Link
+                            href="/admin/retail/vendor-products/create"
+                            className="bg-primary text-primary-foreground inline-flex items-center rounded-md px-4 py-2 text-sm"
+                        >
                             <Plus className="mr-2 h-4 w-4" /> Add Product
                         </Link>
                     </div>
                 </div>
 
                 <div className="flex gap-3">
-                    <select value={vendorId} onChange={(e) => { setVendorId(e.target.value); setTimeout(handleFilter, 0); }} className="rounded-md border px-3 py-2">
+                    <select
+                        value={vendorId}
+                        onChange={(e) => {
+                            setVendorId(e.target.value);
+                            setTimeout(handleFilter, 0);
+                        }}
+                        className="rounded-md border px-3 py-2"
+                    >
                         <option value="">All Vendors</option>
-                        {vendors.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}
+                        {vendors.map((v) => (
+                            <option key={v.id} value={v.id}>
+                                {v.name}
+                            </option>
+                        ))}
                     </select>
                 </div>
 
-                <div className="rounded-lg border bg-card">
+                <div className="bg-card rounded-lg border">
                     <table className="w-full text-sm">
-                        <thead className="border-b bg-muted/50">
+                        <thead className="bg-muted/50 border-b">
                             <tr>
                                 <th className="px-4 py-3 text-left font-medium">Product</th>
                                 <th className="px-4 py-3 text-left font-medium">Vendor</th>
@@ -83,31 +99,41 @@ export default function VendorProducts() {
                         </thead>
                         <tbody>
                             {products.data.map((product) => (
-                                <tr key={product.id} className="border-b hover:bg-muted/30">
+                                <tr key={product.id} className="hover:bg-muted/30 border-b">
                                     <td className="px-4 py-3">
                                         <div className="flex items-center gap-3">
                                             {product.image_url && <img src={product.image_url} alt="" className="h-10 w-10 rounded object-cover" />}
                                             <span className="font-medium">{product.name}</span>
                                         </div>
                                     </td>
-                                    <td className="px-4 py-3 text-muted-foreground">{product.vendor?.name}</td>
+                                    <td className="text-muted-foreground px-4 py-3">{product.vendor?.name}</td>
                                     <td className="px-4 py-3 text-right font-medium">₱{formatPrice(product.price)}</td>
                                     <td className="px-4 py-3 text-right">{product.stock_quantity}</td>
                                     <td className="px-4 py-3 text-center">
-                                        <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${product.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}>
+                                        <span
+                                            className={`rounded-full px-2 py-0.5 text-xs font-medium ${product.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}
+                                        >
                                             {product.is_active ? 'Active' : 'Inactive'}
                                         </span>
                                     </td>
                                     <td className="px-4 py-3 text-right">
                                         <div className="flex justify-end gap-1">
-                                            <Link href={`/admin/retail/vendor-products/${product.id}/edit`} className="rounded p-1 hover:bg-accent"><Edit className="h-4 w-4" /></Link>
-                                            <button onClick={() => handleDelete(product)} className="rounded p-1 hover:bg-red-50"><Trash2 className="h-4 w-4 text-red-500" /></button>
+                                            <Link href={`/admin/retail/vendor-products/${product.id}/edit`} className="hover:bg-accent rounded p-1">
+                                                <Edit className="h-4 w-4" />
+                                            </Link>
+                                            <button onClick={() => handleDelete(product)} className="rounded p-1 hover:bg-red-50">
+                                                <Trash2 className="h-4 w-4 text-red-500" />
+                                            </button>
                                         </div>
                                     </td>
                                 </tr>
                             ))}
                             {products.data.length === 0 && (
-                                <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">No products found</td></tr>
+                                <tr>
+                                    <td colSpan={6} className="text-muted-foreground px-4 py-8 text-center">
+                                        No products found
+                                    </td>
+                                </tr>
                             )}
                         </tbody>
                     </table>
@@ -116,8 +142,13 @@ export default function VendorProducts() {
                 {products.last_page > 1 && (
                     <div className="flex justify-center gap-2">
                         {Array.from({ length: products.last_page }, (_, i) => i + 1).map((page) => (
-                            <Link key={page} href={`/admin/retail/vendor-products?page=${page}&vendor_id=${vendorId}`}
-                                className={`rounded-md px-3 py-1 text-sm ${page === products.current_page ? 'bg-primary text-primary-foreground' : 'border'}`}>{page}</Link>
+                            <Link
+                                key={page}
+                                href={`/admin/retail/vendor-products?page=${page}&vendor_id=${vendorId}`}
+                                className={`rounded-md px-3 py-1 text-sm ${page === products.current_page ? 'bg-primary text-primary-foreground' : 'border'}`}
+                            >
+                                {page}
+                            </Link>
                         ))}
                     </div>
                 )}

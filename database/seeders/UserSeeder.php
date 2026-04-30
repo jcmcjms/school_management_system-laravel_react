@@ -10,9 +10,8 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        User::create([
+        User::firstOrCreate(['email' => 'admin@example.com'], [
             'name' => 'Admin User',
-            'email' => 'admin@example.com',
             'password' => Hash::make('password'),
             'role' => 'admin',
             'employee_id' => 'EMP001',
@@ -21,9 +20,8 @@ class UserSeeder extends Seeder
             'is_active' => true,
         ]);
 
-        User::create([
+        User::firstOrCreate(['email' => 'manager@example.com'], [
             'name' => 'Manager User',
-            'email' => 'manager@example.com',
             'password' => Hash::make('password'),
             'role' => 'manager',
             'employee_id' => 'EMP002',
@@ -33,9 +31,8 @@ class UserSeeder extends Seeder
             'is_active' => true,
         ]);
 
-        User::create([
+        User::firstOrCreate(['email' => 'staff@example.com'], [
             'name' => 'Staff User',
-            'email' => 'staff@example.com',
             'password' => Hash::make('password'),
             'role' => 'staff',
             'employee_id' => 'EMP003',
@@ -45,9 +42,19 @@ class UserSeeder extends Seeder
             'is_active' => true,
         ]);
 
-        User::create([
+        User::firstOrCreate(['email' => 'librarian@example.com'], [
+            'name' => 'Librarian User',
+            'password' => Hash::make('password'),
+            'role' => 'librarian',
+            'employee_id' => 'LIB001',
+            'department' => 'Library',
+            'position' => 'Librarian',
+            'salary_deduction_limit' => 2000.00,
+            'is_active' => true,
+        ]);
+
+        User::firstOrCreate(['email' => 'faculty@example.com'], [
             'name' => 'Faculty User',
-            'email' => 'faculty@example.com',
             'password' => Hash::make('password'),
             'role' => 'faculty',
             'employee_id' => 'EMP004',
@@ -58,9 +65,8 @@ class UserSeeder extends Seeder
             'is_active' => true,
         ]);
 
-        User::create([
+        User::firstOrCreate(['email' => 'student@example.com'], [
             'name' => 'Student User',
-            'email' => 'student@example.com',
             'password' => Hash::make('password'),
             'role' => 'student',
             'student_id' => 'STU001',
@@ -69,13 +75,13 @@ class UserSeeder extends Seeder
             'is_active' => true,
         ]);
 
-        User::create([
+        $student = User::where('student_id', 'STU001')->first();
+        User::firstOrCreate(['email' => 'parent@example.com'], [
             'name' => 'Parent User',
-            'email' => 'parent@example.com',
             'password' => Hash::make('password'),
             'role' => 'parent',
             'parent_id' => 'PAR001',
-            'linked_student_id' => User::where('student_id', 'STU001')->first()?->id,
+            'linked_student_id' => $student?->id,
             'is_active' => true,
         ]);
     }

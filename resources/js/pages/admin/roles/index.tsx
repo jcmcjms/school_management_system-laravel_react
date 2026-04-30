@@ -1,5 +1,5 @@
 import { Head, router, usePage } from '@inertiajs/react';
-import { Shield, Save, Check } from 'lucide-react';
+import { Check, Save, Shield } from 'lucide-react';
 import { useState } from 'react';
 
 import AppLayout from '@/layouts/app-layout';
@@ -38,9 +38,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 export default function AdminRolesIndex() {
     const { roles, permissionGroups } = usePage<RolesPageProps>().props;
-    const [localRoles, setLocalRoles] = useState<Record<number, number[]>>(
-        Object.fromEntries(roles.map((r) => [r.id, [...r.permission_ids]]))
-    );
+    const [localRoles, setLocalRoles] = useState<Record<number, number[]>>(Object.fromEntries(roles.map((r) => [r.id, [...r.permission_ids]])));
     const [saving, setSaving] = useState<number | null>(null);
     const [saved, setSaved] = useState<number | null>(null);
 
@@ -49,9 +47,7 @@ export default function AdminRolesIndex() {
     const togglePermission = (roleId: number, permId: number) => {
         setLocalRoles((prev) => {
             const current = prev[roleId] || [];
-            const updated = current.includes(permId)
-                ? current.filter((id) => id !== permId)
-                : [...current, permId];
+            const updated = current.includes(permId) ? current.filter((id) => id !== permId) : [...current, permId];
             return { ...prev, [roleId]: updated };
         });
     };
@@ -76,7 +72,7 @@ export default function AdminRolesIndex() {
                     setTimeout(() => setSaved(null), 2000);
                 },
                 onError: () => setSaving(null),
-            }
+            },
         );
     };
 
@@ -88,30 +84,24 @@ export default function AdminRolesIndex() {
             <Head title="Roles & Permissions" />
             <div className="flex flex-1 flex-col gap-6 p-6">
                 <div className="flex items-center gap-3">
-                    <Shield className="h-8 w-8 text-primary" />
+                    <Shield className="text-primary h-8 w-8" />
                     <div>
                         <h1 className="text-3xl font-bold tracking-tight">Roles & Permissions</h1>
-                        <p className="text-muted-foreground">
-                            Configure what each role can do. Admin always has full access.
-                        </p>
+                        <p className="text-muted-foreground">Configure what each role can do. Admin always has full access.</p>
                     </div>
                 </div>
 
                 {/* Permission Matrix */}
-                <div className="rounded-lg border bg-card shadow-sm overflow-x-auto">
+                <div className="bg-card overflow-x-auto rounded-lg border shadow-sm">
                     <table className="w-full text-sm">
-                        <thead className="border-b bg-muted/50 sticky top-0">
+                        <thead className="bg-muted/50 sticky top-0 border-b">
                             <tr>
-                                <th className="px-4 py-3 text-left font-medium min-w-[220px] sticky left-0 bg-muted/50 z-10">
-                                    Permission
-                                </th>
+                                <th className="bg-muted/50 sticky left-0 z-10 min-w-[220px] px-4 py-3 text-left font-medium">Permission</th>
                                 {roles.map((role) => (
-                                    <th key={role.id} className="px-4 py-3 text-center font-medium min-w-[120px]">
+                                    <th key={role.id} className="min-w-[120px] px-4 py-3 text-center font-medium">
                                         <div className="flex flex-col items-center gap-1">
                                             <span className="capitalize">{role.display_name}</span>
-                                            {isAdmin(role) && (
-                                                <span className="text-[10px] text-primary font-normal">All Access</span>
-                                            )}
+                                            {isAdmin(role) && <span className="text-primary text-[10px] font-normal">All Access</span>}
                                         </div>
                                     </th>
                                 ))}
@@ -124,7 +114,7 @@ export default function AdminRolesIndex() {
                                     <tr key={`group-${group.name}`}>
                                         <td
                                             colSpan={roles.length + 1}
-                                            className="px-4 py-2 bg-primary/5 font-semibold text-primary text-xs uppercase tracking-wider"
+                                            className="bg-primary/5 text-primary px-4 py-2 text-xs font-semibold tracking-wider uppercase"
                                         >
                                             {group.name}
                                         </td>
@@ -132,19 +122,15 @@ export default function AdminRolesIndex() {
 
                                     {/* Permission Rows */}
                                     {group.permissions.map((perm) => (
-                                        <tr key={perm.id} className="border-b last:border-0 hover:bg-muted/30">
-                                            <td className="px-4 py-2.5 sticky left-0 bg-card z-10">
+                                        <tr key={perm.id} className="hover:bg-muted/30 border-b last:border-0">
+                                            <td className="bg-card sticky left-0 z-10 px-4 py-2.5">
                                                 <div>
                                                     <p className="font-medium">{perm.display_name}</p>
-                                                    {perm.description && (
-                                                        <p className="text-xs text-muted-foreground">{perm.description}</p>
-                                                    )}
+                                                    {perm.description && <p className="text-muted-foreground text-xs">{perm.description}</p>}
                                                 </div>
                                             </td>
                                             {roles.map((role) => {
-                                                const checked = isAdmin(role)
-                                                    ? true
-                                                    : (localRoles[role.id] || []).includes(perm.id);
+                                                const checked = isAdmin(role) ? true : (localRoles[role.id] || []).includes(perm.id);
                                                 const disabled = isAdmin(role);
 
                                                 return (
@@ -155,7 +141,7 @@ export default function AdminRolesIndex() {
                                                                 checked={checked}
                                                                 disabled={disabled}
                                                                 onChange={() => togglePermission(role.id, perm.id)}
-                                                                className="h-4 w-4 rounded border-gray-300 accent-primary disabled:opacity-50"
+                                                                className="accent-primary h-4 w-4 rounded border-gray-300 disabled:opacity-50"
                                                             />
                                                         </label>
                                                     </td>
@@ -182,10 +168,8 @@ export default function AdminRolesIndex() {
                             >
                                 <div>
                                     <p className="font-medium">{role.display_name}</p>
-                                    <p className="text-xs text-muted-foreground">{role.description}</p>
-                                    <p className="mt-1 text-xs text-muted-foreground">
-                                        {(localRoles[role.id] || []).length} permissions
-                                    </p>
+                                    <p className="text-muted-foreground text-xs">{role.description}</p>
+                                    <p className="text-muted-foreground mt-1 text-xs">{(localRoles[role.id] || []).length} permissions</p>
                                 </div>
                                 <button
                                     onClick={() => saveRole(role)}
@@ -195,7 +179,7 @@ export default function AdminRolesIndex() {
                                             ? 'bg-green-600 text-white'
                                             : hasChanged(role)
                                               ? 'bg-primary text-primary-foreground hover:bg-primary/90'
-                                              : 'border text-muted-foreground'
+                                              : 'text-muted-foreground border'
                                     } disabled:opacity-50`}
                                 >
                                     {saving === role.id ? (

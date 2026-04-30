@@ -22,7 +22,7 @@ export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: Breadcrum
             <div className="flex items-center gap-1">
                 <button
                     onClick={toggleTheme}
-                    className="rounded-md p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                    className="text-muted-foreground hover:bg-accent hover:text-foreground rounded-md p-2 transition-colors"
                     aria-label="Toggle dark mode"
                     title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
                 >

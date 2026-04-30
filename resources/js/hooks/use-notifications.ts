@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
 import { type AppNotification } from '@/types';
+import { useCallback, useEffect, useState } from 'react';
 
 interface PollResponse {
     unread_count: number;
@@ -16,7 +16,7 @@ export function useNotifications(intervalMs = 15000) {
     const fetchNotifications = useCallback(async () => {
         try {
             const res = await fetch('/api/notifications/poll', {
-                headers: { 'Accept': 'application/json' },
+                headers: { Accept: 'application/json' },
                 credentials: 'same-origin',
             });
             if (res.ok) {

@@ -1,5 +1,5 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { Plus, Search, Edit, Trash2, Package, ShoppingBag } from 'lucide-react';
+import { Edit, Package, Plus, Search, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
 import AppLayout from '@/layouts/app-layout';
@@ -85,9 +85,16 @@ export default function RetailItems() {
                         <p className="text-muted-foreground">Manage biscuits, candies, chocolates and other retail products</p>
                     </div>
                     <div className="flex gap-2">
-                        <Link href="/admin/retail/categories" className="rounded-md border px-4 py-2 text-sm hover:bg-accent">Categories</Link>
-                        <Link href="/admin/retail/vendors" className="rounded-md border px-4 py-2 text-sm hover:bg-accent">Vendors</Link>
-                        <Link href="/admin/retail/items/create" className="inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground">
+                        <Link href="/admin/retail/categories" className="hover:bg-accent rounded-md border px-4 py-2 text-sm">
+                            Categories
+                        </Link>
+                        <Link href="/admin/retail/vendors" className="hover:bg-accent rounded-md border px-4 py-2 text-sm">
+                            Vendors
+                        </Link>
+                        <Link
+                            href="/admin/retail/items/create"
+                            className="bg-primary text-primary-foreground inline-flex items-center rounded-md px-4 py-2 text-sm"
+                        >
                             <Plus className="mr-2 h-4 w-4" /> Add Item
                         </Link>
                     </div>
@@ -95,19 +102,35 @@ export default function RetailItems() {
 
                 <div className="flex gap-3">
                     <div className="relative flex-1">
-                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                        <input value={search} onChange={(e) => setSearch(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleFilter()}
-                            placeholder="Search items..." className="w-full rounded-md border py-2 pl-10 pr-3" />
+                        <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+                        <input
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleFilter()}
+                            placeholder="Search items..."
+                            className="w-full rounded-md border py-2 pr-3 pl-10"
+                        />
                     </div>
-                    <select value={categoryId} onChange={(e) => { setCategoryId(e.target.value); setTimeout(handleFilter, 0); }} className="rounded-md border px-3 py-2">
+                    <select
+                        value={categoryId}
+                        onChange={(e) => {
+                            setCategoryId(e.target.value);
+                            setTimeout(handleFilter, 0);
+                        }}
+                        className="rounded-md border px-3 py-2"
+                    >
                         <option value="">All Categories</option>
-                        {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                        {categories.map((c) => (
+                            <option key={c.id} value={c.id}>
+                                {c.name}
+                            </option>
+                        ))}
                     </select>
                 </div>
 
-                <div className="rounded-lg border bg-card">
+                <div className="bg-card rounded-lg border">
                     <table className="w-full text-sm">
-                        <thead className="border-b bg-muted/50">
+                        <thead className="bg-muted/50 border-b">
                             <tr>
                                 <th className="px-4 py-3 text-left font-medium">Item</th>
                                 <th className="px-4 py-3 text-left font-medium">Category</th>
@@ -120,19 +143,19 @@ export default function RetailItems() {
                         </thead>
                         <tbody>
                             {items.data.map((item) => (
-                                <tr key={item.id} className="border-b hover:bg-muted/30">
+                                <tr key={item.id} className="hover:bg-muted/30 border-b">
                                     <td className="px-4 py-3">
                                         <div className="flex items-center gap-3">
                                             {item.image_url && <img src={item.image_url} alt="" className="h-10 w-10 rounded object-cover" />}
                                             <span className="font-medium">{item.name}</span>
                                         </div>
                                     </td>
-                                    <td className="px-4 py-3 text-muted-foreground">{item.category?.name}</td>
+                                    <td className="text-muted-foreground px-4 py-3">{item.category?.name}</td>
                                     <td className="px-4 py-3">
                                         {item.vendor ? (
                                             <span className="text-sm">{item.vendor.name}</span>
                                         ) : (
-                                            <span className="text-xs text-muted-foreground">Canteen-owned</span>
+                                            <span className="text-muted-foreground text-xs">Canteen-owned</span>
                                         )}
                                     </td>
                                     <td className="px-4 py-3 text-right font-medium">₱{formatPrice(item.price)}</td>
@@ -144,15 +167,25 @@ export default function RetailItems() {
                                     </td>
                                     <td className="px-4 py-3 text-right">
                                         <div className="flex justify-end gap-1">
-                                            <button onClick={() => openStockModal(item)} className="rounded p-1 hover:bg-accent" title="Adjust Stock"><Package className="h-4 w-4" /></button>
-                                            <Link href={`/admin/retail/items/${item.id}/edit`} className="rounded p-1 hover:bg-accent"><Edit className="h-4 w-4" /></Link>
-                                            <button onClick={() => handleDelete(item)} className="rounded p-1 hover:bg-red-50"><Trash2 className="h-4 w-4 text-red-500" /></button>
+                                            <button onClick={() => openStockModal(item)} className="hover:bg-accent rounded p-1" title="Adjust Stock">
+                                                <Package className="h-4 w-4" />
+                                            </button>
+                                            <Link href={`/admin/retail/items/${item.id}/edit`} className="hover:bg-accent rounded p-1">
+                                                <Edit className="h-4 w-4" />
+                                            </Link>
+                                            <button onClick={() => handleDelete(item)} className="rounded p-1 hover:bg-red-50">
+                                                <Trash2 className="h-4 w-4 text-red-500" />
+                                            </button>
                                         </div>
                                     </td>
                                 </tr>
                             ))}
                             {items.data.length === 0 && (
-                                <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">No items found</td></tr>
+                                <tr>
+                                    <td colSpan={6} className="text-muted-foreground px-4 py-8 text-center">
+                                        No items found
+                                    </td>
+                                </tr>
                             )}
                         </tbody>
                     </table>
@@ -161,27 +194,40 @@ export default function RetailItems() {
                 {items.last_page > 1 && (
                     <div className="flex justify-center gap-2">
                         {Array.from({ length: items.last_page }, (_, i) => i + 1).map((page) => (
-                            <Link key={page} href={`/admin/retail/items?page=${page}&search=${search}&category_id=${categoryId}`}
-                                className={`rounded-md px-3 py-1 text-sm ${page === items.current_page ? 'bg-primary text-primary-foreground' : 'border'}`}>{page}</Link>
+                            <Link
+                                key={page}
+                                href={`/admin/retail/items?page=${page}&search=${search}&category_id=${categoryId}`}
+                                className={`rounded-md px-3 py-1 text-sm ${page === items.current_page ? 'bg-primary text-primary-foreground' : 'border'}`}
+                            >
+                                {page}
+                            </Link>
                         ))}
                     </div>
                 )}
 
                 {showStockModal && stockItem && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowStockModal(false)}>
-                        <div className="w-full max-w-sm rounded-lg bg-card p-6" onClick={(e) => e.stopPropagation()}>
+                        <div className="bg-card w-full max-w-sm rounded-lg p-6" onClick={(e) => e.stopPropagation()}>
                             <h2 className="mb-4 text-xl font-semibold">Adjust Stock</h2>
-                            <p className="mb-4 text-sm text-muted-foreground">Current: {stockItem.available_quantity}</p>
+                            <p className="text-muted-foreground mb-4 text-sm">Current: {stockItem.available_quantity}</p>
                             <form onSubmit={handleStockSubmit} className="space-y-4">
                                 <div>
                                     <label className="mb-1 block text-sm font-medium">Adjustment (+/-)</label>
-                                    <input type="number" value={stockAdjustment} onChange={(e) => setStockAdjustment(parseInt(e.target.value) || 0)}
-                                        className="w-full rounded-md border px-3 py-2" />
+                                    <input
+                                        type="number"
+                                        value={stockAdjustment}
+                                        onChange={(e) => setStockAdjustment(parseInt(e.target.value) || 0)}
+                                        className="w-full rounded-md border px-3 py-2"
+                                    />
                                     <p className="mt-1 text-xs">New: {Math.max(0, stockItem.available_quantity + stockAdjustment)}</p>
                                 </div>
                                 <div className="flex gap-2">
-                                    <button type="button" onClick={() => setShowStockModal(false)} className="flex-1 rounded-md border py-2">Cancel</button>
-                                    <button type="submit" className="flex-1 rounded-md bg-primary py-2 text-primary-foreground">Update</button>
+                                    <button type="button" onClick={() => setShowStockModal(false)} className="flex-1 rounded-md border py-2">
+                                        Cancel
+                                    </button>
+                                    <button type="submit" className="bg-primary text-primary-foreground flex-1 rounded-md py-2">
+                                        Update
+                                    </button>
                                 </div>
                             </form>
                         </div>

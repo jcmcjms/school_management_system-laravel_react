@@ -1,6 +1,6 @@
 import { Head, router, usePage } from '@inertiajs/react';
-import { ArrowLeft, Upload, Trash2 } from 'lucide-react';
-import { useState, useRef } from 'react';
+import { ArrowLeft, Trash2, Upload } from 'lucide-react';
+import { useRef, useState } from 'react';
 
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
@@ -104,56 +104,114 @@ export default function RetailItemForm() {
             <Head title={isEditing ? `Edit ${item!.name}` : 'New Retail Item'} />
             <div className="flex flex-1 flex-col gap-6 p-6">
                 <div className="flex items-center gap-4">
-                    <a href="/admin/retail/items" className="rounded-md border p-2 hover:bg-accent"><ArrowLeft className="h-4 w-4" /></a>
+                    <a href="/admin/retail/items" className="hover:bg-accent rounded-md border p-2">
+                        <ArrowLeft className="h-4 w-4" />
+                    </a>
                     <h1 className="text-3xl font-bold">{isEditing ? 'Edit' : 'New'} Retail Item</h1>
                 </div>
 
                 <form onSubmit={handleSubmit} className="max-w-2xl space-y-6">
-                    <div className="rounded-lg border bg-card p-6 space-y-4">
+                    <div className="bg-card space-y-4 rounded-lg border p-6">
                         <h2 className="text-xl font-semibold">Basic Info</h2>
                         <div>
                             <label className="mb-1 block text-sm font-medium">Name *</label>
-                            <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="w-full rounded-md border px-3 py-2" required />
+                            <input
+                                value={form.name}
+                                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                                className="w-full rounded-md border px-3 py-2"
+                                required
+                            />
                         </div>
                         <div>
                             <label className="mb-1 block text-sm font-medium">Category *</label>
-                            <select value={form.retail_category_id} onChange={(e) => setForm({ ...form, retail_category_id: e.target.value })} className="w-full rounded-md border px-3 py-2" required>
+                            <select
+                                value={form.retail_category_id}
+                                onChange={(e) => setForm({ ...form, retail_category_id: e.target.value })}
+                                className="w-full rounded-md border px-3 py-2"
+                                required
+                            >
                                 <option value="">Select category</option>
-                                {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                {categories.map((c) => (
+                                    <option key={c.id} value={c.id}>
+                                        {c.name}
+                                    </option>
+                                ))}
                             </select>
                         </div>
                         <div>
                             <label className="mb-1 block text-sm font-medium">Supplier Vendor (Optional)</label>
-                            <select value={form.vendor_id} onChange={(e) => setForm({ ...form, vendor_id: e.target.value })} className="w-full rounded-md border px-3 py-2">
+                            <select
+                                value={form.vendor_id}
+                                onChange={(e) => setForm({ ...form, vendor_id: e.target.value })}
+                                className="w-full rounded-md border px-3 py-2"
+                            >
                                 <option value="">Canteen-owned (no vendor)</option>
-                                {vendors.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}
+                                {vendors.map((v) => (
+                                    <option key={v.id} value={v.id}>
+                                        {v.name}
+                                    </option>
+                                ))}
                             </select>
-                            <p className="mt-1 text-xs text-muted-foreground">If a vendor supplies this item, select them here for settlement at end of day</p>
+                            <p className="text-muted-foreground mt-1 text-xs">
+                                If a vendor supplies this item, select them here for settlement at end of day
+                            </p>
                         </div>
                         {form.vendor_id && (
                             <div>
                                 <label className="mb-1 block text-sm font-medium">Vendor Commission (%)</label>
-                                <input type="number" min="0" max="100" value={form.vendor_commission} onChange={(e) => setForm({ ...form, vendor_commission: e.target.value })} className="w-full rounded-md border px-3 py-2" />
-                                <p className="mt-1 text-xs text-muted-foreground">Percentage vendor receives from sales (rest goes to canteen)</p>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    max="100"
+                                    value={form.vendor_commission}
+                                    onChange={(e) => setForm({ ...form, vendor_commission: e.target.value })}
+                                    className="w-full rounded-md border px-3 py-2"
+                                />
+                                <p className="text-muted-foreground mt-1 text-xs">Percentage vendor receives from sales (rest goes to canteen)</p>
                             </div>
                         )}
                         <div>
                             <label className="mb-1 block text-sm font-medium">Description</label>
-                            <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="w-full rounded-md border px-3 py-2" rows={2} />
+                            <textarea
+                                value={form.description}
+                                onChange={(e) => setForm({ ...form, description: e.target.value })}
+                                className="w-full rounded-md border px-3 py-2"
+                                rows={2}
+                            />
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <label className="mb-1 block text-sm font-medium">Price (₱) *</label>
-                                <input type="number" step="0.01" min="0" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} className="w-full rounded-md border px-3 py-2" required />
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    value={form.price}
+                                    onChange={(e) => setForm({ ...form, price: e.target.value })}
+                                    className="w-full rounded-md border px-3 py-2"
+                                    required
+                                />
                             </div>
                             <div>
                                 <label className="mb-1 block text-sm font-medium">Stock *</label>
-                                <input type="number" min="0" value={form.available_quantity} onChange={(e) => setForm({ ...form, available_quantity: e.target.value })} className="w-full rounded-md border px-3 py-2" />
+                                <input
+                                    type="number"
+                                    min="0"
+                                    value={form.available_quantity}
+                                    onChange={(e) => setForm({ ...form, available_quantity: e.target.value })}
+                                    className="w-full rounded-md border px-3 py-2"
+                                />
                             </div>
                         </div>
                         <div>
                             <label className="mb-1 block text-sm font-medium">Low Stock Threshold</label>
-                            <input type="number" min="0" value={form.low_stock_threshold} onChange={(e) => setForm({ ...form, low_stock_threshold: e.target.value })} className="w-full rounded-md border px-3 py-2" />
+                            <input
+                                type="number"
+                                min="0"
+                                value={form.low_stock_threshold}
+                                onChange={(e) => setForm({ ...form, low_stock_threshold: e.target.value })}
+                                className="w-full rounded-md border px-3 py-2"
+                            />
                         </div>
                         <div>
                             <label className="mb-1 block text-sm font-medium">Image</label>
@@ -161,10 +219,20 @@ export default function RetailItemForm() {
                             {imagePreview ? (
                                 <div className="relative mt-1 inline-block">
                                     <img src={imagePreview} alt="Preview" className="h-32 w-32 rounded-lg border object-cover" />
-                                    <button type="button" onClick={removeImage} className="absolute -right-2 -top-2 rounded-full bg-red-500 p-1 text-white"><Trash2 className="h-3 w-3" /></button>
+                                    <button
+                                        type="button"
+                                        onClick={removeImage}
+                                        className="absolute -top-2 -right-2 rounded-full bg-red-500 p-1 text-white"
+                                    >
+                                        <Trash2 className="h-3 w-3" />
+                                    </button>
                                 </div>
                             ) : (
-                                <button type="button" onClick={() => fileInputRef.current?.click()} className="flex items-center gap-2 rounded-md border border-dashed px-4 py-3 text-sm text-muted-foreground hover:bg-accent">
+                                <button
+                                    type="button"
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className="text-muted-foreground hover:bg-accent flex items-center gap-2 rounded-md border border-dashed px-4 py-3 text-sm"
+                                >
                                     <Upload className="h-4 w-4" /> Upload Photo
                                 </button>
                             )}
@@ -175,7 +243,11 @@ export default function RetailItemForm() {
                         </label>
                     </div>
 
-                    <button type="submit" disabled={processing} className="w-full rounded-md bg-primary py-3 text-lg font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50">
+                    <button
+                        type="submit"
+                        disabled={processing}
+                        className="bg-primary text-primary-foreground hover:bg-primary/90 w-full rounded-md py-3 text-lg font-medium disabled:opacity-50"
+                    >
                         {processing ? 'Saving...' : isEditing ? 'Update Item' : 'Create Item'}
                     </button>
                 </form>
