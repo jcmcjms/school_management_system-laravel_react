@@ -367,3 +367,70 @@ export interface LibraryStats {
     unpaid_fines: number;
     overdue_borrowings: number;
 }
+
+export interface Stats {
+    todayOrders: number;
+    todayRevenue: number;
+    totalUsers: number;
+    activeUsers: number;
+    totalMenuItems: number;
+    totalCategories: number;
+}
+
+export interface OrderStatusCounts {
+    pending: number;
+    preparing: number;
+    ready: number;
+    served: number;
+}
+
+export interface LowStockItem {
+    id: number;
+    name: string;
+    available_quantity: number;
+    slug: string;
+}
+
+export interface InventoryAlert {
+    id: number;
+    name: string;
+    current_quantity: number;
+    minimum_quantity: number;
+    sku: string;
+}
+
+export interface DashboardStats {
+    stats: Stats;
+    recentOrders: Order[];
+    lowStockItems: LowStockItem[];
+    lowStockInventory: InventoryItem[];
+    orderStatusCounts: OrderStatusCounts;
+}
+
+export interface PageProps<T = Record<string, unknown>> {
+    props: T & {
+        auth?: Auth;
+        [key: string]: unknown;
+    };
+}
+
+export interface InertiaProps {
+    auth: Auth;
+    errors: Record<string, string>;
+    flash: {
+        success?: string;
+        error?: string;
+    };
+}
+
+export type SortDirection = 'asc' | 'desc';
+
+export interface SortConfig {
+    sort_by: string;
+    sort_dir: SortDirection;
+}
+
+export interface PaginationConfig {
+    page: number;
+    per_page: number;
+}
