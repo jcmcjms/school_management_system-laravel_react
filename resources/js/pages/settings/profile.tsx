@@ -1,16 +1,16 @@
 import { type BreadcrumbItem, type SharedData } from '@/types';
 import { Transition } from '@headlessui/react';
-import { Head, Link, useForm, usePage, router } from '@inertiajs/react';
-import { FormEventHandler, useRef, useState } from 'react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { Camera, Trash2 } from 'lucide-react';
+import { FormEventHandler, useRef, useState } from 'react';
 
 import DeleteUser from '@/components/delete-user';
 import HeadingSmall from '@/components/heading-small';
 import InputError from '@/components/input-error';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useInitials } from '@/hooks/use-initials';
 import AppLayout from '@/layouts/app-layout';
 import SettingsLayout from '@/layouts/settings/layout';
@@ -55,7 +55,10 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
 
         router.post(route('profile.avatar'), formData, {
             forceFormData: true,
-            onFinish: () => { setUploadingAvatar(false); setAvatarPreview(null); },
+            onFinish: () => {
+                setUploadingAvatar(false);
+                setAvatarPreview(null);
+            },
         });
     };
 
@@ -80,8 +83,8 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                     <div>
                         <HeadingSmall title="Profile photo" description="Upload a photo to personalize your account" />
                         <div className="mt-4 flex items-center gap-6">
-                            <div className="relative group">
-                                <Avatar className="h-20 w-20 overflow-hidden rounded-full ring-2 ring-border">
+                            <div className="group relative">
+                                <Avatar className="ring-border h-20 w-20 overflow-hidden rounded-full ring-2">
                                     <AvatarImage src={avatarPreview || auth.user.avatar || undefined} alt={auth.user.name} />
                                     <AvatarFallback className="rounded-full bg-neutral-200 text-lg font-medium text-black dark:bg-neutral-700 dark:text-white">
                                         {getInitials(auth.user.name)}
@@ -126,7 +129,7 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                                         </Button>
                                     )}
                                 </div>
-                                <p className="text-xs text-muted-foreground">JPG, PNG, or WebP. Max 2MB.</p>
+                                <p className="text-muted-foreground text-xs">JPG, PNG, or WebP. Max 2MB.</p>
                             </div>
                         </div>
                     </div>

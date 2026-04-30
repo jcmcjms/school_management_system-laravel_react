@@ -37,17 +37,12 @@ const formatPrice = (price: number | string): string => {
     return Number(price).toFixed(2);
 };
 
-const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Menu', href: '/menu' },
-];
+const breadcrumbs: BreadcrumbItem[] = [{ title: 'Menu', href: '/menu' }];
 
 export default function MenuShow() {
     const { item } = usePage<MenuShowPageProps>().props;
 
-    const breadcrumbsWithItem: BreadcrumbItem[] = [
-        ...breadcrumbs,
-        { title: item.name, href: `/menu/${item.slug}` },
-    ];
+    const breadcrumbsWithItem: BreadcrumbItem[] = [...breadcrumbs, { title: item.name, href: `/menu/${item.slug}` }];
 
     return (
         <AppLayout breadcrumbs={breadcrumbsWithItem}>
@@ -56,11 +51,7 @@ export default function MenuShow() {
                 <div className="mx-auto w-full max-w-3xl">
                     {item.image_url && (
                         <div className="mb-6 aspect-video w-full overflow-hidden rounded-xl">
-                            <img
-                                src={item.image_url}
-                                alt={item.name}
-                                className="h-full w-full object-cover"
-                            />
+                            <img src={item.image_url} alt={item.name} className="h-full w-full object-cover" />
                         </div>
                     )}
 
@@ -79,9 +70,7 @@ export default function MenuShow() {
                         </div>
                     </div>
 
-                    {item.description && (
-                        <p className="mt-6 text-lg text-muted-foreground">{item.description}</p>
-                    )}
+                    {item.description && <p className="text-muted-foreground mt-6 text-lg">{item.description}</p>}
 
                     {item.nutritional_info && Object.keys(item.nutritional_info).length > 0 && (
                         <div className="mt-6">
@@ -90,7 +79,7 @@ export default function MenuShow() {
                                 {Object.entries(item.nutritional_info).map(([key, value]) => (
                                     <div key={key} className="text-center">
                                         <div className="text-2xl font-bold">{value}</div>
-                                        <div className="text-sm text-muted-foreground">{key}</div>
+                                        <div className="text-muted-foreground text-sm">{key}</div>
                                     </div>
                                 ))}
                             </div>
@@ -116,9 +105,7 @@ export default function MenuShow() {
                             <ul className="grid gap-2 rounded-lg border p-4 sm:grid-cols-2">
                                 {item.ingredients.map((ingredient) => (
                                     <li key={ingredient.id} className="flex justify-between">
-                                        <span className="text-muted-foreground">
-                                            {ingredient.ingredient_name}
-                                        </span>
+                                        <span className="text-muted-foreground">{ingredient.ingredient_name}</span>
                                         <span className="font-medium">
                                             {ingredient.quantity_required} {ingredient.unit}
                                         </span>

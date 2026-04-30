@@ -1,11 +1,11 @@
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AppLayout from '@/layouts/app-layout';
 import { type LibraryFine, type PaginatedData } from '@/types';
-import { Head, usePage, router } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import { Coins } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useState } from 'react';
 
 interface Props {
@@ -15,7 +15,10 @@ interface Props {
     };
 }
 
-const breadcrumbs = [{ title: 'Library', href: '/library' }, { title: 'Fines', href: '/library/fines' }];
+const breadcrumbs = [
+    { title: 'Library', href: '/library' },
+    { title: 'Fines', href: '/library/fines' },
+];
 
 export default function LibraryFinesIndex({ fines, filters = {} }: Props) {
     const { props } = usePage();
@@ -77,22 +80,23 @@ export default function LibraryFinesIndex({ fines, filters = {} }: Props) {
                                         <td className="p-4">
                                             <div>
                                                 <p className="font-medium">{fine.user?.name}</p>
-                                                <p className="text-xs text-muted-foreground">{fine.user?.role}</p>
+                                                <p className="text-muted-foreground text-xs">{fine.user?.role}</p>
                                             </div>
                                         </td>
                                         <td className="p-4">
                                             <div>
                                                 <p className="font-medium">{fine.borrowing?.book?.title}</p>
-                                                <p className="text-xs text-muted-foreground">Borrowed: {new Date(fine.borrowing?.borrowed_at || '').toLocaleDateString()}</p>
+                                                <p className="text-muted-foreground text-xs">
+                                                    Borrowed: {new Date(fine.borrowing?.borrowed_at || '').toLocaleDateString()}
+                                                </p>
                                             </div>
                                         </td>
                                         <td className="p-4 font-medium">${fine.amount.toFixed(2)}</td>
                                         <td className="p-4">{fine.reason || '-'}</td>
                                         <td className="p-4">
-                                            <Badge variant={
-                                                fine.status === 'paid' ? 'default' :
-                                                fine.status === 'waived' ? 'outline' : 'destructive'
-                                            }>
+                                            <Badge
+                                                variant={fine.status === 'paid' ? 'default' : fine.status === 'waived' ? 'outline' : 'destructive'}
+                                            >
                                                 {fine.status}
                                             </Badge>
                                         </td>
@@ -100,8 +104,12 @@ export default function LibraryFinesIndex({ fines, filters = {} }: Props) {
                                         <td className="p-4">
                                             {fine.status === 'pending' && (
                                                 <div className="flex gap-2">
-                                                    <Button size="sm" onClick={() => handlePay(fine.id)}>Pay</Button>
-                                                    <Button size="sm" variant="outline" onClick={() => handleWaive(fine.id)}>Waive</Button>
+                                                    <Button size="sm" onClick={() => handlePay(fine.id)}>
+                                                        Pay
+                                                    </Button>
+                                                    <Button size="sm" variant="outline" onClick={() => handleWaive(fine.id)}>
+                                                        Waive
+                                                    </Button>
                                                 </div>
                                             )}
                                         </td>
@@ -110,8 +118,8 @@ export default function LibraryFinesIndex({ fines, filters = {} }: Props) {
                             </tbody>
                         </table>
                         {fines.data.length === 0 && (
-                            <div className="text-center py-8">
-                                <Coins className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
+                            <div className="py-8 text-center">
+                                <Coins className="text-muted-foreground mx-auto mb-2 h-12 w-12" />
                                 <p className="text-muted-foreground">No fines found</p>
                             </div>
                         )}
@@ -121,7 +129,12 @@ export default function LibraryFinesIndex({ fines, filters = {} }: Props) {
                 {fines.last_page > 1 && (
                     <div className="flex justify-center gap-2">
                         {Array.from({ length: fines.last_page }, (_, i) => (
-                            <Button key={i} variant={fines.current_page === i + 1 ? 'default' : 'outline'} size="sm" onClick={() => window.location.href = `/library/fines?page=${i + 1}`}>
+                            <Button
+                                key={i}
+                                variant={fines.current_page === i + 1 ? 'default' : 'outline'}
+                                size="sm"
+                                onClick={() => (window.location.href = `/library/fines?page=${i + 1}`)}
+                            >
                                 {i + 1}
                             </Button>
                         ))}

@@ -1,24 +1,27 @@
-import AppLayout from '@/layouts/app-layout';
-import { type LibraryCategory } from '@/types';
-import { Head, usePage, useForm, router } from '@inertiajs/react';
-import { FolderTree, Plus, Trash2 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import AppLayout from '@/layouts/app-layout';
+import { type LibraryCategory } from '@/types';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
+import { FolderTree, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 interface Props {
     categories: LibraryCategory[];
 }
 
-const breadcrumbs = [{ title: 'Library', href: '/library' }, { title: 'Categories', href: '/library/categories' }];
+const breadcrumbs = [
+    { title: 'Library', href: '/library' },
+    { title: 'Categories', href: '/library/categories' },
+];
 
 export default function LibraryCategoriesIndex({ categories }: Props) {
     const { props } = usePage();
     const csrfToken = (props as any).csrf_token as string;
-    
+
     const [isOpen, setIsOpen] = useState(false);
     const { data, setData, post, processing, reset } = useForm({
         name: '',
@@ -58,8 +61,13 @@ export default function LibraryCategoriesIndex({ categories }: Props) {
                     </div>
                     <Dialog open={isOpen} onOpenChange={setIsOpen}>
                         <DialogTrigger asChild>
-                            <Button onClick={() => { reset(); setIsOpen(true); }}>
-                                <Plus className="h-4 w-4 mr-2" />
+                            <Button
+                                onClick={() => {
+                                    reset();
+                                    setIsOpen(true);
+                                }}
+                            >
+                                <Plus className="mr-2 h-4 w-4" />
                                 Add Category
                             </Button>
                         </DialogTrigger>
@@ -70,33 +78,34 @@ export default function LibraryCategoriesIndex({ categories }: Props) {
                             <form onSubmit={handleSubmit} className="space-y-4">
                                 <div className="grid gap-2">
                                     <Label>Name</Label>
-                                    <Input
-                                        value={data.name}
-                                        onChange={(e) => setData('name', e.target.value)}
-                                        required
-                                    />
+                                    <Input value={data.name} onChange={(e) => setData('name', e.target.value)} required />
                                 </div>
                                 <div className="grid gap-2">
                                     <Label>Description</Label>
-                                    <Input
-                                        value={data.description}
-                                        onChange={(e) => setData('description', e.target.value)}
-                                    />
+                                    <Input value={data.description} onChange={(e) => setData('description', e.target.value)} />
                                 </div>
                                 <div className="grid gap-2">
                                     <Label>Parent Category</Label>
                                     <select
                                         value={String(data.parent_id)}
                                         onChange={(e) => setData('parent_id', e.target.value)}
-                                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2"
+                                        className="border-input bg-background flex h-10 w-full rounded-md border px-3 py-2"
                                     >
                                         <option value="">No Parent</option>
-                                        {categories.map((c) => (<option key={c.id} value={c.id}>{c.name}</option>))}
+                                        {categories.map((c) => (
+                                            <option key={c.id} value={c.id}>
+                                                {c.name}
+                                            </option>
+                                        ))}
                                     </select>
                                 </div>
                                 <div className="flex justify-end gap-2">
-                                    <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>Cancel</Button>
-                                    <Button type="submit" disabled={processing}>Create</Button>
+                                    <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
+                                        Cancel
+                                    </Button>
+                                    <Button type="submit" disabled={processing}>
+                                        Create
+                                    </Button>
                                 </div>
                             </form>
                         </DialogContent>
@@ -109,14 +118,12 @@ export default function LibraryCategoriesIndex({ categories }: Props) {
                             <CardContent className="pt-4">
                                 <div className="flex items-start justify-between">
                                     <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded bg-muted flex items-center justify-center">
-                                            <FolderTree className="h-5 w-5 text-muted-foreground" />
+                                        <div className="bg-muted flex h-10 w-10 items-center justify-center rounded">
+                                            <FolderTree className="text-muted-foreground h-5 w-5" />
                                         </div>
                                         <div>
                                             <h3 className="font-medium">{category.name}</h3>
-                                            {category.description && (
-                                                <p className="text-sm text-muted-foreground">{category.description}</p>
-                                            )}
+                                            {category.description && <p className="text-muted-foreground text-sm">{category.description}</p>}
                                         </div>
                                     </div>
                                     <div className="flex gap-1">
@@ -126,9 +133,9 @@ export default function LibraryCategoriesIndex({ categories }: Props) {
                                     </div>
                                 </div>
                                 {category.children && category.children.length > 0 && (
-                                    <div className="mt-3 pl-13 border-l-2 ml-5">
+                                    <div className="mt-3 ml-5 border-l-2 pl-13">
                                         {category.children.map((child) => (
-                                            <div key={child.id} className="text-sm text-muted-foreground py-1">
+                                            <div key={child.id} className="text-muted-foreground py-1 text-sm">
                                                 {child.name}
                                             </div>
                                         ))}
@@ -142,7 +149,7 @@ export default function LibraryCategoriesIndex({ categories }: Props) {
                 {categories.length === 0 && (
                     <Card>
                         <CardContent className="py-8 text-center">
-                            <FolderTree className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
+                            <FolderTree className="text-muted-foreground mx-auto mb-2 h-12 w-12" />
                             <p className="text-muted-foreground">No categories yet</p>
                         </CardContent>
                     </Card>

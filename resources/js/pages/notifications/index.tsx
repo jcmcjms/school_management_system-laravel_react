@@ -1,20 +1,8 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import {
-    Bell,
-    ShoppingCart,
-    ChefHat,
-    BellRing,
-    CreditCard,
-    AlertTriangle,
-    QrCode,
-    XCircle,
-    CheckCircle,
-    Package,
-    Check,
-} from 'lucide-react';
+import { AlertTriangle, Bell, BellRing, Check, CheckCircle, ChefHat, CreditCard, Package, QrCode, ShoppingCart, XCircle } from 'lucide-react';
 
 import AppLayout from '@/layouts/app-layout';
-import { type BreadcrumbItem, type AppNotification, type PaginatedData } from '@/types';
+import { type AppNotification, type BreadcrumbItem, type PaginatedData } from '@/types';
 
 interface NotificationsPageProps {
     notifications: PaginatedData<AppNotification>;
@@ -31,7 +19,7 @@ const iconMap: Record<string, React.ReactNode> = {
     'x-circle': <XCircle className="h-5 w-5" />,
     'check-circle': <CheckCircle className="h-5 w-5" />,
     'utensils-crossed': <ChefHat className="h-5 w-5" />,
-    'package': <Package className="h-5 w-5" />,
+    package: <Package className="h-5 w-5" />,
 };
 
 const typeColors: Record<string, string> = {
@@ -80,7 +68,7 @@ export default function NotificationsIndex() {
                     {unreadCount > 0 && (
                         <button
                             onClick={markAllRead}
-                            className="inline-flex items-center gap-2 rounded-md border px-4 py-2 text-sm font-medium transition-colors hover:bg-accent"
+                            className="hover:bg-accent inline-flex items-center gap-2 rounded-md border px-4 py-2 text-sm font-medium transition-colors"
                         >
                             <Check className="h-4 w-4" /> Mark all as read
                         </button>
@@ -88,12 +76,10 @@ export default function NotificationsIndex() {
                 </div>
 
                 {notifications.data.length === 0 ? (
-                    <div className="rounded-lg border bg-card p-12 text-center shadow-sm">
-                        <Bell className="mx-auto h-12 w-12 text-muted-foreground" />
-                        <p className="mt-4 text-lg text-muted-foreground">No notifications yet</p>
-                        <p className="mt-1 text-sm text-muted-foreground">
-                            You'll be notified when something important happens
-                        </p>
+                    <div className="bg-card rounded-lg border p-12 text-center shadow-sm">
+                        <Bell className="text-muted-foreground mx-auto h-12 w-12" />
+                        <p className="text-muted-foreground mt-4 text-lg">No notifications yet</p>
+                        <p className="text-muted-foreground mt-1 text-sm">You'll be notified when something important happens</p>
                     </div>
                 ) : (
                     <div className="space-y-2">
@@ -106,23 +92,24 @@ export default function NotificationsIndex() {
                                 <button
                                     key={n.id}
                                     onClick={() => handleClick(n)}
-                                    className={`flex w-full items-start gap-4 rounded-lg border bg-card p-4 text-left shadow-sm transition-all hover:shadow-md ${isUnread ? 'border-primary/30 bg-primary/5' : ''}`}
+                                    className={`bg-card flex w-full items-start gap-4 rounded-lg border p-4 text-left shadow-sm transition-all hover:shadow-md ${isUnread ? 'border-primary/30 bg-primary/5' : ''}`}
                                 >
-                                    <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${colorClass}`}>
-                                        {icon}
-                                    </div>
+                                    <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${colorClass}`}>{icon}</div>
                                     <div className="min-w-0 flex-1">
                                         <div className="flex items-center gap-2">
                                             <p className={`text-sm ${isUnread ? 'font-bold' : 'font-medium'}`}>{n.data.title}</p>
-                                            {isUnread && <span className="h-2.5 w-2.5 rounded-full bg-primary" />}
+                                            {isUnread && <span className="bg-primary h-2.5 w-2.5 rounded-full" />}
                                         </div>
-                                        <p className="mt-0.5 text-sm text-muted-foreground">{n.data.message}</p>
-                                        <p className="mt-1 text-xs text-muted-foreground/70">{formatDate(n.created_at)}</p>
+                                        <p className="text-muted-foreground mt-0.5 text-sm">{n.data.message}</p>
+                                        <p className="text-muted-foreground/70 mt-1 text-xs">{formatDate(n.created_at)}</p>
                                     </div>
                                     {isUnread && (
                                         <button
-                                            onClick={(e) => { e.stopPropagation(); markAsRead(n.id); }}
-                                            className="shrink-0 rounded-md border p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                markAsRead(n.id);
+                                            }}
+                                            className="text-muted-foreground hover:bg-accent hover:text-foreground shrink-0 rounded-md border p-1.5 transition-colors"
                                             title="Mark as read"
                                         >
                                             <Check className="h-4 w-4" />
@@ -140,9 +127,7 @@ export default function NotificationsIndex() {
                                         key={page}
                                         href={`/notifications?page=${page}`}
                                         className={`rounded-md px-3 py-1 text-sm ${
-                                            page === notifications.current_page
-                                                ? 'bg-primary text-primary-foreground'
-                                                : 'border hover:bg-accent'
+                                            page === notifications.current_page ? 'bg-primary text-primary-foreground' : 'hover:bg-accent border'
                                         }`}
                                     >
                                         {page}

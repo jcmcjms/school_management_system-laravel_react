@@ -2,11 +2,11 @@ import '../css/app.css';
 
 import { createInertiaApp } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
+import { LoaderCircle } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { route as routeFn } from 'ziggy-js';
 import { initializeTheme } from './hooks/use-appearance';
-import { useState, useEffect } from 'react';
-import { LoaderCircle } from 'lucide-react';
 
 declare global {
     const route: typeof routeFn;
@@ -35,10 +35,10 @@ function AppWithLoading({ App, props }: { App: React.FC<any>; props: any }) {
     return (
         <>
             {isLoading && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-background">
+                <div className="bg-background fixed inset-0 z-50 flex items-center justify-center">
                     <div className="flex flex-col items-center gap-4">
-                        <LoaderCircle className="h-12 w-12 animate-spin text-primary" />
-                        <p className="text-sm font-medium text-muted-foreground">Loading SMS...</p>
+                        <LoaderCircle className="text-primary h-12 w-12 animate-spin" />
+                        <p className="text-muted-foreground text-sm font-medium">Loading SMS...</p>
                     </div>
                 </div>
             )}

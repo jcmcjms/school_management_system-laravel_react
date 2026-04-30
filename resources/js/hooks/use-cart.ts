@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
-import { usePage } from '@inertiajs/react';
 import { type CartItem, type MenuItem, type SharedData } from '@/types';
+import { usePage } from '@inertiajs/react';
+import { useCallback, useEffect, useState } from 'react';
 
 function getCartKey(userId?: number): string {
     return userId ? `sms_cart_${userId}` : 'sms_cart_guest';
@@ -40,11 +40,7 @@ export function useCart() {
         setItems((prev) => {
             const existing = prev.find((i) => i.menuItem.id === menuItem.id);
             if (existing) {
-                return prev.map((i) =>
-                    i.menuItem.id === menuItem.id
-                        ? { ...i, quantity: i.quantity + quantity }
-                        : i
-                );
+                return prev.map((i) => (i.menuItem.id === menuItem.id ? { ...i, quantity: i.quantity + quantity } : i));
             }
             return [...prev, { menuItem, quantity }];
         });
@@ -55,9 +51,7 @@ export function useCart() {
             if (quantity <= 0) {
                 return prev.filter((i) => i.menuItem.id !== menuItemId);
             }
-            return prev.map((i) =>
-                i.menuItem.id === menuItemId ? { ...i, quantity } : i
-            );
+            return prev.map((i) => (i.menuItem.id === menuItemId ? { ...i, quantity } : i));
         });
     }, []);
 
@@ -69,10 +63,7 @@ export function useCart() {
         setItems([]);
     }, []);
 
-    const total = items.reduce(
-        (sum, item) => sum + Number(item.menuItem.price) * item.quantity,
-        0
-    );
+    const total = items.reduce((sum, item) => sum + Number(item.menuItem.price) * item.quantity, 0);
 
     const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
 

@@ -1,8 +1,8 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import { ShoppingCart, Wallet, Clock, CalendarClock, ChefHat, CheckCircle } from 'lucide-react';
+import { CalendarClock, CheckCircle, ChefHat, Clock, ShoppingCart, Wallet } from 'lucide-react';
 
-import AppLayout from '@/layouts/app-layout';
 import { LiveClock } from '@/components/live-clock';
+import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 
 interface Stats {
@@ -45,8 +45,7 @@ interface CustomerDashboardProps {
 }
 
 const formatPrice = (price: number | string): string => Number(price).toFixed(2);
-const formatDate = (dateStr: string): string =>
-    new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+const formatDate = (dateStr: string): string => new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
 const getStatusBadge = (status: string) => {
     const styles: Record<string, string> = {
@@ -97,61 +96,61 @@ export default function CustomerDashboard() {
 
                 {/* Stats Cards */}
                 <div className={`grid gap-4 ${isFaculty ? 'md:grid-cols-4' : 'md:grid-cols-3'}`}>
-                    <div className="rounded-lg border bg-card p-6 shadow-sm">
+                    <div className="bg-card rounded-lg border p-6 shadow-sm">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-sm font-medium text-muted-foreground">Total Orders</p>
+                                <p className="text-muted-foreground text-sm font-medium">Total Orders</p>
                                 <p className="text-3xl font-bold">{stats.totalOrders}</p>
-                                <p className="text-xs text-muted-foreground">All time</p>
+                                <p className="text-muted-foreground text-xs">All time</p>
                             </div>
-                            <div className="rounded-full bg-primary/10 p-3">
-                                <ShoppingCart className="h-5 w-5 text-primary" />
+                            <div className="bg-primary/10 rounded-full p-3">
+                                <ShoppingCart className="text-primary h-5 w-5" />
                             </div>
                         </div>
                     </div>
 
-                    <div className="rounded-lg border bg-card p-6 shadow-sm">
+                    <div className="bg-card rounded-lg border p-6 shadow-sm">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-sm font-medium text-muted-foreground">This Month</p>
+                                <p className="text-muted-foreground text-sm font-medium">This Month</p>
                                 <p className="text-3xl font-bold">{stats.thisMonthOrders}</p>
-                                <p className="text-xs text-muted-foreground">Orders</p>
+                                <p className="text-muted-foreground text-xs">Orders</p>
                             </div>
-                            <div className="rounded-full bg-primary/10 p-3">
-                                <Clock className="h-5 w-5 text-primary" />
+                            <div className="bg-primary/10 rounded-full p-3">
+                                <Clock className="text-primary h-5 w-5" />
                             </div>
                         </div>
                     </div>
 
-                    <div className="rounded-lg border bg-card p-6 shadow-sm">
+                    <div className="bg-card rounded-lg border p-6 shadow-sm">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-sm font-medium text-muted-foreground">Reservations</p>
+                                <p className="text-muted-foreground text-sm font-medium">Reservations</p>
                                 <p className="text-3xl font-bold">{stats.activeReservations}</p>
-                                <p className="text-xs text-muted-foreground">Active</p>
+                                <p className="text-muted-foreground text-xs">Active</p>
                             </div>
-                            <div className="rounded-full bg-primary/10 p-3">
-                                <CalendarClock className="h-5 w-5 text-primary" />
+                            <div className="bg-primary/10 rounded-full p-3">
+                                <CalendarClock className="text-primary h-5 w-5" />
                             </div>
                         </div>
                     </div>
 
                     {isFaculty && (
-                        <div className="rounded-lg border bg-card p-6 shadow-sm">
+                        <div className="bg-card rounded-lg border p-6 shadow-sm">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-sm font-medium text-muted-foreground">Salary Balance</p>
+                                    <p className="text-muted-foreground text-sm font-medium">Salary Balance</p>
                                     <p className="text-3xl font-bold">₱{formatPrice(stats.monthlyRemaining)}</p>
-                                    <p className="text-xs text-muted-foreground">
+                                    <p className="text-muted-foreground text-xs">
                                         ₱{formatPrice(stats.monthlyUsed)} / ₱{formatPrice(stats.monthlyLimit)}
                                     </p>
                                 </div>
-                                <div className="rounded-full bg-primary/10 p-3">
-                                    <Wallet className="h-5 w-5 text-primary" />
+                                <div className="bg-primary/10 rounded-full p-3">
+                                    <Wallet className="text-primary h-5 w-5" />
                                 </div>
                             </div>
                             {/* Usage bar */}
-                            <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-muted">
+                            <div className="bg-muted mt-3 h-2 w-full overflow-hidden rounded-full">
                                 <div
                                     className={`h-full rounded-full transition-all ${usagePercentage > 80 ? 'bg-red-500' : usagePercentage > 50 ? 'bg-yellow-500' : 'bg-green-500'}`}
                                     style={{ width: `${usagePercentage}%` }}
@@ -165,55 +164,57 @@ export default function CustomerDashboard() {
                 <div className="grid gap-3 sm:grid-cols-3">
                     <Link
                         href="/menu"
-                        className="flex items-center gap-3 rounded-lg border bg-card p-4 shadow-sm transition-all hover:shadow-md hover:border-primary"
+                        className="bg-card hover:border-primary flex items-center gap-3 rounded-lg border p-4 shadow-sm transition-all hover:shadow-md"
                     >
-                        <div className="rounded-full bg-primary/10 p-2">
-                            <ChefHat className="h-5 w-5 text-primary" />
+                        <div className="bg-primary/10 rounded-full p-2">
+                            <ChefHat className="text-primary h-5 w-5" />
                         </div>
                         <div>
                             <p className="font-medium">Browse Menu</p>
-                            <p className="text-xs text-muted-foreground">View and order meals</p>
+                            <p className="text-muted-foreground text-xs">View and order meals</p>
                         </div>
                     </Link>
                     <Link
                         href="/orders"
-                        className="flex items-center gap-3 rounded-lg border bg-card p-4 shadow-sm transition-all hover:shadow-md hover:border-primary"
+                        className="bg-card hover:border-primary flex items-center gap-3 rounded-lg border p-4 shadow-sm transition-all hover:shadow-md"
                     >
-                        <div className="rounded-full bg-primary/10 p-2">
-                            <ShoppingCart className="h-5 w-5 text-primary" />
+                        <div className="bg-primary/10 rounded-full p-2">
+                            <ShoppingCart className="text-primary h-5 w-5" />
                         </div>
                         <div>
                             <p className="font-medium">My Orders</p>
-                            <p className="text-xs text-muted-foreground">View order history</p>
+                            <p className="text-muted-foreground text-xs">View order history</p>
                         </div>
                     </Link>
                     <Link
                         href="/reservations"
-                        className="flex items-center gap-3 rounded-lg border bg-card p-4 shadow-sm transition-all hover:shadow-md hover:border-primary"
+                        className="bg-card hover:border-primary flex items-center gap-3 rounded-lg border p-4 shadow-sm transition-all hover:shadow-md"
                     >
-                        <div className="rounded-full bg-primary/10 p-2">
-                            <CalendarClock className="h-5 w-5 text-primary" />
+                        <div className="bg-primary/10 rounded-full p-2">
+                            <CalendarClock className="text-primary h-5 w-5" />
                         </div>
                         <div>
                             <p className="font-medium">Reservations</p>
-                            <p className="text-xs text-muted-foreground">Track QR pickups</p>
+                            <p className="text-muted-foreground text-xs">Track QR pickups</p>
                         </div>
                     </Link>
                 </div>
 
                 {/* Recent Orders */}
-                <div className="rounded-lg border bg-card p-6 shadow-sm">
+                <div className="bg-card rounded-lg border p-6 shadow-sm">
                     <div className="mb-4 flex items-center justify-between">
                         <h2 className="text-xl font-semibold">Recent Orders</h2>
-                        <Link href="/orders" className="text-sm text-primary hover:underline">View all →</Link>
+                        <Link href="/orders" className="text-primary text-sm hover:underline">
+                            View all →
+                        </Link>
                     </div>
                     {recentOrders.length === 0 ? (
                         <div className="py-8 text-center">
-                            <ShoppingCart className="mx-auto h-10 w-10 text-muted-foreground" />
-                            <p className="mt-3 text-muted-foreground">You haven't placed any orders yet</p>
+                            <ShoppingCart className="text-muted-foreground mx-auto h-10 w-10" />
+                            <p className="text-muted-foreground mt-3">You haven't placed any orders yet</p>
                             <Link
                                 href="/menu"
-                                className="mt-3 inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+                                className="bg-primary text-primary-foreground hover:bg-primary/90 mt-3 inline-flex items-center rounded-md px-4 py-2 text-sm font-medium"
                             >
                                 Browse Menu
                             </Link>
@@ -224,14 +225,14 @@ export default function CustomerDashboard() {
                                 <Link
                                     key={order.id}
                                     href={`/orders/${order.id}`}
-                                    className="flex items-center justify-between rounded-md border p-3 transition-colors hover:bg-accent/50"
+                                    className="hover:bg-accent/50 flex items-center justify-between rounded-md border p-3 transition-colors"
                                 >
                                     <div>
                                         <p className="font-medium">{order.order_number}</p>
-                                        <p className="text-sm text-muted-foreground">
+                                        <p className="text-muted-foreground text-sm">
                                             {order.items?.map((item) => `${item.quantity}x ${item.menu_item?.name}`).join(', ')}
                                         </p>
-                                        <p className="text-xs text-muted-foreground">{formatDate(order.created_at)}</p>
+                                        <p className="text-muted-foreground text-xs">{formatDate(order.created_at)}</p>
                                     </div>
                                     <div className="text-right">
                                         <p className="font-medium">₱{formatPrice(order.total)}</p>

@@ -1,15 +1,15 @@
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AppLayout from '@/layouts/app-layout';
 import { type LibraryBook, type LibraryCategory, type PaginatedData } from '@/types';
-import { Head, usePage, useForm, router } from '@inertiajs/react';
-import { BookOpen, Plus, Pencil, Trash2, Search } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
+import { BookOpen, Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import { useState } from 'react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface Props {
     books: PaginatedData<LibraryBook>;
@@ -21,12 +21,15 @@ interface Props {
     };
 }
 
-const breadcrumbs = [{ title: 'Library', href: '/library' }, { title: 'Books', href: '/library/books' }];
+const breadcrumbs = [
+    { title: 'Library', href: '/library' },
+    { title: 'Books', href: '/library/books' },
+];
 
 export default function LibraryBooksIndex({ books, categories, filters = {} }: Props) {
     const { props } = usePage();
     const csrfToken = (props as any).csrf_token as string;
-    
+
     const [isOpen, setIsOpen] = useState(false);
     const [editingBook, setEditingBook] = useState<LibraryBook | null>(null);
     const [search, setSearch] = useState(filters.search || '');
@@ -102,11 +105,15 @@ export default function LibraryBooksIndex({ books, categories, filters = {} }: P
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
-        router.get('/library/books', {
-            search: search || undefined,
-            category: category && category !== '0' ? category : undefined,
-            status: status && status !== '0' ? status : undefined,
-        }, { preserveState: true });
+        router.get(
+            '/library/books',
+            {
+                search: search || undefined,
+                category: category && category !== '0' ? category : undefined,
+                status: status && status !== '0' ? status : undefined,
+            },
+            { preserveState: true },
+        );
     };
 
     const clearFilters = () => {
@@ -119,55 +126,51 @@ export default function LibraryBooksIndex({ books, categories, filters = {} }: P
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Library Books" />
-            <div className="space-y-6">
+            <div className="space-y-4 p-3 sm:p-4 lg:p-6">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-semibold">Library Books</h1>
-                        <p className="text-muted-foreground">Manage the book collection</p>
+                        <h1 className="text-2xl font-semibold sm:text-3xl">Library Books</h1>
+                        <p className="text-muted-foreground text-sm">Manage the book collection</p>
                     </div>
-                    <Dialog open={isOpen} onOpenChange={(open) => { setIsOpen(open); if (!open) { setEditingBook(null); reset(); } }}>
+                    <Dialog
+                        open={isOpen}
+                        onOpenChange={(open) => {
+                            setIsOpen(open);
+                            if (!open) {
+                                setEditingBook(null);
+                                reset();
+                            }
+                        }}
+                    >
                         <DialogTrigger asChild>
-                            <Button onClick={handleOpenNew}>
-                                <Plus className="h-4 w-4 mr-2" />
+                            <Button onClick={handleOpenNew} className="inline-flex items-center">
+                                <Plus className="mr-2 h-4 w-4" />
                                 Add Book
                             </Button>
                         </DialogTrigger>
-                        <DialogContent className="max-w-md">
+                        <DialogContent className="max-w-md sm:max-w-lg">
                             <DialogHeader>
                                 <DialogTitle>{editingBook ? 'Edit Book' : 'Add New Book'}</DialogTitle>
                             </DialogHeader>
-                            <form onSubmit={handleSubmit} className="space-y-4">
-                                <div className="grid gap-2">
-                                    <Label>ISBN</Label>
-                                    <Input
-                                        value={data.isbn}
-                                        onChange={(e) => setData('isbn', e.target.value)}
-                                        required
-                                    />
-                                </div>
-                                <div className="grid gap-2">
-                                    <Label>Title</Label>
-                                    <Input
-                                        value={data.title}
-                                        onChange={(e) => setData('title', e.target.value)}
-                                        required
-                                    />
+                            <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+                                <div className="grid gap-2 sm:grid-cols-2">
+                                    <div className="grid gap-2">
+                                        <Label>ISBN</Label>
+                                        <Input value={data.isbn} onChange={(e) => setData('isbn', e.target.value)} required />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label>Title</Label>
+                                        <Input value={data.title} onChange={(e) => setData('title', e.target.value)} required />
+                                    </div>
                                 </div>
                                 <div className="grid gap-2">
                                     <Label>Author</Label>
-                                    <Input
-                                        value={data.author}
-                                        onChange={(e) => setData('author', e.target.value)}
-                                        required
-                                    />
+                                    <Input value={data.author} onChange={(e) => setData('author', e.target.value)} required />
                                 </div>
-                                <div className="grid grid-cols-2 gap-2">
+                                <div className="grid gap-2 sm:grid-cols-2">
                                     <div className="grid gap-2">
                                         <Label>Publisher</Label>
-                                        <Input
-                                            value={data.publisher}
-                                            onChange={(e) => setData('publisher', e.target.value)}
-                                        />
+                                        <Input value={data.publisher} onChange={(e) => setData('publisher', e.target.value)} />
                                     </div>
                                     <div className="grid gap-2">
                                         <Label>Year</Label>
@@ -180,24 +183,24 @@ export default function LibraryBooksIndex({ books, categories, filters = {} }: P
                                 </div>
                                 <div className="grid gap-2">
                                     <Label>Category</Label>
-                                    <Select
-                                        value={String(data.category_id)}
-                                        onValueChange={(val) => setData('category_id', val)}
-                                    >
-                                        <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
+                                    <Select value={String(data.category_id)} onValueChange={(val) => setData('category_id', val)}>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select category" />
+                                        </SelectTrigger>
                                         <SelectContent>
-                                            {categories.map((c) => (<SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>))}
+                                            {categories.map((c) => (
+                                                <SelectItem key={c.id} value={String(c.id)}>
+                                                    {c.name}
+                                                </SelectItem>
+                                            ))}
                                         </SelectContent>
                                     </Select>
                                 </div>
                                 <div className="grid gap-2">
                                     <Label>Description</Label>
-                                    <Input
-                                        value={data.description}
-                                        onChange={(e) => setData('description', e.target.value)}
-                                    />
+                                    <Input value={data.description} onChange={(e) => setData('description', e.target.value)} />
                                 </div>
-                                <div className="grid grid-cols-2 gap-2">
+                                <div className="grid gap-2 sm:grid-cols-2">
                                     <div className="grid gap-2">
                                         <Label>Total Copies</Label>
                                         <Input
@@ -210,19 +213,15 @@ export default function LibraryBooksIndex({ books, categories, filters = {} }: P
                                     </div>
                                     <div className="grid gap-2">
                                         <Label>Location</Label>
-                                        <Input
-                                            value={data.location}
-                                            onChange={(e) => setData('location', e.target.value)}
-                                        />
+                                        <Input value={data.location} onChange={(e) => setData('location', e.target.value)} />
                                     </div>
                                 </div>
                                 <div className="grid gap-2">
                                     <Label>Status</Label>
-                                    <Select
-                                        value={data.status}
-                                        onValueChange={(val) => setData('status', val)}
-                                    >
-                                        <SelectTrigger><SelectValue /></SelectTrigger>
+                                    <Select value={data.status} onValueChange={(val) => setData('status', val)}>
+                                        <SelectTrigger>
+                                            <SelectValue />
+                                        </SelectTrigger>
                                         <SelectContent>
                                             <SelectItem value="available">Available</SelectItem>
                                             <SelectItem value="unavailable">Unavailable</SelectItem>
@@ -231,7 +230,16 @@ export default function LibraryBooksIndex({ books, categories, filters = {} }: P
                                     </Select>
                                 </div>
                                 <div className="flex justify-end gap-2">
-                                    <Button type="button" variant="outline" onClick={() => { setIsOpen(false); setEditingBook(null); }}>Cancel</Button>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={() => {
+                                            setIsOpen(false);
+                                            setEditingBook(null);
+                                        }}
+                                    >
+                                        Cancel
+                                    </Button>
                                     <Button type="submit" disabled={processing}>
                                         {editingBook ? 'Update' : 'Create'}
                                     </Button>
@@ -244,27 +252,26 @@ export default function LibraryBooksIndex({ books, categories, filters = {} }: P
                 <Card>
                     <CardHeader>
                         <CardTitle className="text-lg">Search & Filter</CardTitle>
-                        <form onSubmit={handleSearch} className="flex gap-4 mt-4">
+                        <form onSubmit={handleSearch} className="mt-2 flex flex-col gap-2 sm:mt-4 sm:flex-row sm:gap-4">
                             <div className="relative flex-1">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                <Input
-                                    placeholder="Search by title, author, or ISBN..."
-                                    className="pl-9"
-                                    value={search}
-                                    onChange={(e) => setSearch(e.target.value)}
-                                />
+                                <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+                                <Input placeholder="Search..." className="pl-9" value={search} onChange={(e) => setSearch(e.target.value)} />
                             </div>
                             <Select value={category} onValueChange={setCategory}>
-                                <SelectTrigger className="w-[180px]">
+                                <SelectTrigger className="w-full sm:w-[160px]">
                                     <SelectValue placeholder="All Categories" />
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="0">All Categories</SelectItem>
-                                    {categories.map((c) => (<SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>))}
+                                    {categories.map((c) => (
+                                        <SelectItem key={c.id} value={String(c.id)}>
+                                            {c.name}
+                                        </SelectItem>
+                                    ))}
                                 </SelectContent>
                             </Select>
                             <Select value={status} onValueChange={setStatus}>
-                                <SelectTrigger className="w-[150px]">
+                                <SelectTrigger className="w-full sm:w-[140px]">
                                     <SelectValue placeholder="All Status" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -274,55 +281,76 @@ export default function LibraryBooksIndex({ books, categories, filters = {} }: P
                                     <SelectItem value="archived">Archived</SelectItem>
                                 </SelectContent>
                             </Select>
-                            <Button type="submit">Search</Button>
+                            <Button type="submit" className="sm:px-4">
+                                Search
+                            </Button>
                             {(search || category || status) && (
-                                <Button type="button" variant="outline" onClick={clearFilters}>Clear</Button>
+                                <Button type="button" variant="outline" onClick={clearFilters}>
+                                    Clear
+                                </Button>
                             )}
                         </form>
                     </CardHeader>
                     <CardContent className="p-0">
-                        <table className="w-full">
-                            <thead className="border-b">
-                                <tr className="text-left">
-                                    <th className="p-4 font-medium">ISBN</th>
-                                    <th className="p-4 font-medium">Title</th>
-                                    <th className="p-4 font-medium">Author</th>
-                                    <th className="p-4 font-medium">Category</th>
-                                    <th className="p-4 font-medium">Copies</th>
-                                    <th className="p-4 font-medium">Status</th>
-                                    <th className="p-4 font-medium">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {books.data.map((book) => (
-                                    <tr key={book.id} className="border-b">
-                                        <td className="p-4">{book.isbn}</td>
-                                        <td className="p-4 font-medium">{book.title}</td>
-                                        <td className="p-4">{book.author}</td>
-                                        <td className="p-4">{book.category?.name || '-'}</td>
-                                        <td className="p-4">{book.available_copies} / {book.total_copies}</td>
-                                        <td className="p-4">
-                                            <Badge variant={book.status === 'available' ? 'default' : book.status === 'unavailable' ? 'secondary' : 'outline'}>
-                                                {book.status}
-                                            </Badge>
-                                        </td>
-                                        <td className="p-4">
-                                            <div className="flex gap-2">
-                                                <Button size="sm" variant="outline" onClick={() => handleEdit(book)}>
-                                                    <Pencil className="h-4 w-4" />
-                                                </Button>
-                                                <Button size="sm" variant="outline" className="text-destructive" onClick={() => handleDelete(book.id)}>
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
-                                            </div>
-                                        </td>
+                        <div className="overflow-x-auto">
+                            <table className="w-full">
+                                <thead className="border-b">
+                                    <tr className="text-left">
+                                        <th className="p-3 text-xs font-medium sm:p-4 sm:text-sm">ISBN</th>
+                                        <th className="p-3 text-xs font-medium sm:p-4 sm:text-sm">Title</th>
+                                        <th className="hidden p-3 text-xs font-medium sm:p-4 sm:text-sm md:table-cell">Author</th>
+                                        <th className="hidden p-3 text-xs font-medium sm:p-4 sm:text-sm lg:table-cell">Category</th>
+                                        <th className="p-3 text-xs font-medium sm:p-4 sm:text-sm">Copies</th>
+                                        <th className="hidden p-3 text-xs font-medium sm:table-cell sm:p-4 sm:text-sm">Status</th>
+                                        <th className="p-3 text-xs font-medium sm:p-4 sm:text-sm">Actions</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    {books.data.map((book) => (
+                                        <tr key={book.id} className="border-b">
+                                            <td className="p-3 text-xs sm:p-4 sm:text-sm">{book.isbn}</td>
+                                            <td className="p-3 text-xs font-medium sm:p-4 sm:text-sm">{book.title}</td>
+                                            <td className="hidden p-3 text-xs sm:p-4 sm:text-sm md:table-cell">{book.author}</td>
+                                            <td className="hidden p-3 text-xs sm:p-4 sm:text-sm lg:table-cell">{book.category?.name || '-'}</td>
+                                            <td className="p-3 text-xs sm:p-4 sm:text-sm">
+                                                {book.available_copies} / {book.total_copies}
+                                            </td>
+                                            <td className="hidden p-3 sm:table-cell sm:p-4">
+                                                <Badge
+                                                    variant={
+                                                        book.status === 'available'
+                                                            ? 'default'
+                                                            : book.status === 'unavailable'
+                                                              ? 'secondary'
+                                                              : 'outline'
+                                                    }
+                                                >
+                                                    {book.status}
+                                                </Badge>
+                                            </td>
+                                            <td className="p-3 sm:p-4">
+                                                <div className="flex gap-1">
+                                                    <Button size="sm" variant="outline" onClick={() => handleEdit(book)}>
+                                                        <Pencil className="h-3 w-3 sm:h-4 sm:w-4" />
+                                                    </Button>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        className="text-destructive"
+                                                        onClick={() => handleDelete(book.id)}
+                                                    >
+                                                        <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                                                    </Button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                         {books.data.length === 0 && (
-                            <div className="text-center py-8">
-                                <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
+                            <div className="py-8 text-center">
+                                <BookOpen className="text-muted-foreground mx-auto mb-2 h-10 sm:h-12" />
                                 <p className="text-muted-foreground">No books found</p>
                             </div>
                         )}
@@ -332,10 +360,10 @@ export default function LibraryBooksIndex({ books, categories, filters = {} }: P
                 {books.last_page > 1 && (
                     <div className="flex justify-center gap-2">
                         {Array.from({ length: books.last_page }, (_, i) => (
-                            <Button 
-                                key={i} 
-                                variant={books.current_page === i + 1 ? 'default' : 'outline'} 
-                                size="sm" 
+                            <Button
+                                key={i}
+                                variant={books.current_page === i + 1 ? 'default' : 'outline'}
+                                size="sm"
                                 onClick={() => router.get(`/library/books?page=${i + 1}`, {}, { preserveState: true })}
                             >
                                 {i + 1}
