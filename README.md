@@ -1,6 +1,21 @@
-# 🍽️ School Canteen Management System (SMS)
+# 🏫 SMS - School Management System
 
-A comprehensive, full-stack web application for managing school canteen operations — from menu management and order processing to inventory tracking, payment handling, and revenue reporting. Built with **Laravel 12**, **Inertia.js**, **React 19**, and **TypeScript**.
+A comprehensive, all-in-one full-stack web application for managing all school operations — from canteen management, library system, user management, to inventory tracking, payment handling, and revenue reporting. Built with **Laravel 12**, **Inertia.js**, **React 19**, and **TypeScript**.
+
+**SMS (School Management System)** consolidates multiple school modules into a single unified platform:
+
+### Available Modules
+
+| Module | Features |
+|---|---|
+| **🍽️ Canteen** | Menu management, ordering, cart, reservations, QR codes, payments |
+| **📦 Inventory** | Stock tracking, auto-deduction, low-stock alerts, transactions |
+| **🛒 Retail** | Retail items, vendor management, settlements, quick sell |
+| **📚 Library** | Book catalog, borrowing, reservations, fines, reports |
+| **💬 Chat** | Direct messaging, conversations, real-time polling |
+| **🔔 Notifications** | In-app alerts, read/unread status, polling updates |
+| **👥 Users** | CRUD, CSV import, role management, salary deductions |
+| **📊 Analytics** | Revenue tracking, trends, exports, faculty deductions |
 
 ---
 
@@ -25,11 +40,11 @@ A comprehensive, full-stack web application for managing school canteen operatio
 
 ## 🌟 Overview
 
-The School Canteen Management System digitizes the entire canteen workflow for a school environment. It replaces paper-based ordering, manual inventory counts, and cash-only transactions with a streamlined digital platform that supports six distinct user roles, three payment methods, QR-code-based reservations, and real-time inventory tracking with automatic deduction.
+SMS (School Management System) is an all-in-one digital platform that consolidates multiple school operations into a single unified system. It replaces fragmented, paper-based workflows with a streamlined digital solution supporting seven distinct user roles, multiple payment methods, QR-code-based reservations, real-time inventory tracking, library management, and comprehensive staff administration.
 
 ### Key Highlights
 
-- **Role-Based Access Control (RBAC)** — 6 roles with isolated dashboards and permissions
+- **Role-Based Access Control (RBAC)** — 7 roles with isolated dashboards and permissions
 - **Complete Order Lifecycle** — Browse menu → Add to cart → Checkout → Pay → Prepare → Serve
 - **Smart Inventory** — Auto-deducts raw materials when orders are served, based on ingredient recipes
 - **Multi-Payment Support** — GCash, Cash (both confirmed at counter by staff), and Salary Deduction (in-app with limit enforcement for faculty)
@@ -38,6 +53,8 @@ The School Canteen Management System digitizes the entire canteen workflow for a
 - **Real-time Notifications** — In-app alerts for orders, payments, inventory, and reservations
 - **Chat/Messaging** — Direct messaging between users within the system
 - **Retail & Vendor Management** — Manage retail items (biscuits, candies, chocolates) with external vendor settlements
+- **Library Management** — Book catalog, borrowing system, reservations, fines management
+- **Staff Management** — Employee tracking, salary deductions, department organization
 
 ---
 
@@ -178,7 +195,6 @@ The School Canteen Management System digitizes the entire canteen workflow for a
 | **Styling** | Tailwind CSS | 4.x |
 | **UI Components** | shadcn/ui (Radix primitives) | — |
 | **Icons** | Lucide React | 0.475 |
-| **QR Codes** | qrcode.react | — |
 | **Build Tool** | Vite | 6.x |
 | **Database** | MySQL / PostgreSQL / SQLite | — |
 | **PHP** | PHP | ≥ 8.2 |
@@ -224,6 +240,10 @@ The application follows a **modular monolith** architecture pattern:
 5. **Cart in LocalStorage** — Client-side cart state via custom `useCart` hook; persists across page navigations
 6. **Cashier-Confirmed Payments** — GCash and Cash are both handled at the physical counter; only salary deduction is processed in-app
 7. **Vendor Settlement Flow** — End-of-day workflow for external vendors with sales tracking, commission calculation, and stock return
+8. **Service Layer Pattern** — Business logic isolated in Services for testability and reusability
+9. **Form Requests** — Centralized validation logic using Laravel Form Request classes
+10. **API Resources** — Consistent JSON transformation using Laravel API Resources
+11. **Modular Architecture** — Each module (Canteen, Library, Chat, Inventory) is isolated but shares common infrastructure
 
 ---
 
@@ -375,38 +395,41 @@ The system uses a **Roles + Permissions** architecture. Each user has one role, 
 
 ### Roles Overview
 
-| Role | Dashboard | Can Order | Admin Panels | Kitchen |
-|---|---|---|---|---|
-| **Admin** | Overview stats | ✅ | All (superuser) | ❌ |
-| **Manager** | Overview stats | ✅ | Menu, Retail, Inventory, Revenue | ❌ |
-| **Staff** | Kitchen queue | ❌ | ❌ | ✅ Order status, QR scan, payment confirm, Quick Sell |
-| **Faculty** | Personal orders + deduction info | ✅ (+ salary deduction) | ❌ | ❌ |
-| **Student** | Personal orders | ✅ | ❌ | ❌ |
-| **Parent** | Linked student orders | ✅ | ❌ | ❌ |
+| Role | Dashboard | Can Order | Admin Panels | Kitchen | Library |
+|---|---|---|---|---|---|
+| **Admin** | Overview stats | ✅ | All (superuser) | ❌ | ❌ |
+| **Manager** | Overview stats | ✅ | Menu, Retail, Inventory, Revenue | ❌ | ❌ |
+| **Librarian** | Library overview | ❌ | Library Management | ❌ | ✅ |
+| **Staff** | Kitchen queue | ❌ | ❌ | ✅ | ❌ |
+| **Faculty** | Personal orders + deduction info | ✅ (+ salary deduction) | ❌ | ❌ | ✅ |
+| **Student** | Personal orders | ✅ | ❌ | ❌ | ✅ |
+| **Parent** | Linked student orders | ✅ | ❌ | ❌ | ✅ |
 
-### Default Permission Matrix (19 Permissions)
+### Default Permission Matrix (20 Permissions)
 
-| Permission | Admin | Manager | Staff | Faculty | Student | Parent |
-|---|:---:|:---:|:---:|:---:|:---:|:---:|
-| `view_admin_dashboard` | ✅ | ✅ | | | | |
-| `manage_menu` | ✅ | ✅ | | | | |
-| `manage_categories` | ✅ | ✅ | | | | |
-| `manage_users` | ✅ | | | | | |
-| `import_users` | ✅ | | | | | |
-| `manage_inventory` | ✅ | ✅ | | | | |
-| `add_inventory_stock` | ✅ | ✅ | ✅ | | | |
-| `view_revenue` | ✅ | ✅ | | | | |
-| `export_revenue` | ✅ | ✅ | | | | |
-| `manage_deduction_limits` | ✅ | ✅ | | | | |
-| `view_kitchen` | ✅ | | ✅ | | | |
-| `update_order_status` | ✅ | | ✅ | | | |
-| `confirm_payment` | ✅ | | ✅ | | | |
-| `redeem_reservation` | ✅ | | ✅ | | | |
-| `place_order` | ✅ | ✅ | | ✅ | ✅ | ✅ |
-| `view_own_orders` | ✅ | ✅ | | ✅ | ✅ | ✅ |
-| `use_salary_deduction` | ✅ | | | ✅ | | |
-| `browse_menu` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `manage_roles` | ✅ | | | | | |
+| Permission | Admin | Manager | Librarian | Staff | Faculty | Student | Parent |
+|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| `view_admin_dashboard` | ✅ | ✅ | | | | | |
+| `manage_menu` | ✅ | ✅ | | | | | |
+| `manage_categories` | ✅ | ✅ | | | | | |
+| `manage_users` | ✅ | | | | | | |
+| `import_users` | ✅ | | | | | | |
+| `manage_inventory` | ✅ | ✅ | | | | | |
+| `add_inventory_stock` | ✅ | ✅ | | ✅ | | | |
+| `view_revenue` | ✅ | ✅ | | | | | |
+| `export_revenue` | ✅ | ✅ | | | | | |
+| `manage_deduction_limits` | ✅ | ✅ | | | | | |
+| `view_library` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `manage_library` | ✅ | | ✅ | | | | |
+| `view_kitchen` | ✅ | | | ✅ | | | |
+| `update_order_status` | ✅ | | | ✅ | | | |
+| `confirm_payment` | ✅ | | | ✅ | | | |
+| `redeem_reservation` | ✅ | | | ✅ | | | |
+| `place_order` | ✅ | ✅ | | | ✅ | ✅ | ✅ |
+| `view_own_orders` | ✅ | ✅ | | | ✅ | ✅ | ✅ |
+| `use_salary_deduction` | ✅ | | | | ✅ | | |
+| `browse_menu` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `manage_roles` | ✅ | | | | | | |
 
 ---
 
@@ -483,6 +506,76 @@ resources/js/pages/
 
 ---
 
+## 🏗️ Service Layer Architecture
+
+The application follows the **Service Layer pattern** to keep controllers thin and business logic reusable.
+
+### Service Layer Pattern
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Controllers (Thin)                        │
+│  - Handle HTTP requests/responses                           │
+│  - Validate input using Form Requests                      │
+│  - Call Service methods                                    │
+│  - Return Inertia responses                               │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    Services (Business Logic)                │
+│  - BaseService: CRUD operations, filtering, pagination     │
+│  - UserService: User CRUD, import, deduction limits        │
+│  - OrderService: Order lifecycle, status updates           │
+│  - MenuService: Menu items, categories, stock              │
+│  - InventoryService: Stock management, alerts              │
+│  - DashboardService: Statistics aggregation                │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    Models (Data)                            │
+│  - Eloquent relationships                                  │
+│  - Scopes, accessors, mutators                            │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Form Requests
+
+All validation is centralized in Form Request classes:
+
+| Request Class | Purpose |
+|---|---|
+| `StoreUserRequest` | User creation validation |
+| `UpdateUserRequest` | User update validation |
+| `StoreMenuItemRequest` | Menu item creation validation |
+| `UpdateMenuItemRequest` | Menu item update validation |
+| `StoreInventoryItemRequest` | Inventory creation validation |
+| `UpdateInventoryItemRequest` | Inventory update validation |
+| `AddInventoryStockRequest` | Stock addition validation |
+
+### API Resources
+
+Consistent JSON responses using Laravel API Resources:
+
+| Resource | Purpose |
+|---|---|
+| `UserResource` | User data transformation |
+| `OrderResource` | Order with relations |
+| `OrderItemResource` | Order line items |
+| `MenuItemResource` | Menu item data |
+| `MenuCategoryResource` | Category with items count |
+| `UserCollection` | Paginated user list |
+
+### Benefits
+
+- **Testability**: Services can be unit tested in isolation
+- **Reusability**: Services can be called from controllers, jobs, or console commands
+- **Maintainability**: Business logic is centralized and easy to modify
+- **Single Responsibility**: Controllers only handle HTTP; Services handle business logic
+
+---
+
 ## 🛣️ API Routes
 
 ### Public Routes
@@ -520,31 +613,60 @@ sms/
 ├── app/
 │   ├── Http/
 │   │   ├── Controllers/       # 18 controllers
-│   │   └── Middleware/
-│   │       ├── RoleMiddleware.php
-│   │       └── PermissionMiddleware.php
+│   │   ├── Middleware/
+│   │   │   ├── RoleMiddleware.php
+│   │   │   └── PermissionMiddleware.php
+│   │   ├── Requests/
+│   │   │   ├── Admin/        # Form Request classes
+│   │   │   │   ├── StoreUserRequest.php
+│   │   │   │   ├── UpdateUserRequest.php
+│   │   │   │   ├── StoreMenuItemRequest.php
+│   │   │   │   └── ...
+│   │   │   └── Auth/
+│   │   └── Resources/         # API Resource classes
+│   │       ├── UserResource.php
+│   │       ├── OrderResource.php
+│   │       └── ...
 │   ├── Models/                # 21 Eloquent models
+│   ├── Services/              # Business logic layer
+│   │   ├── BaseService.php    # Abstract CRUD base
+│   │   ├── UserService.php
+│   │   ├── OrderService.php
+│   │   ├── MenuService.php
+│   │   ├── InventoryService.php
+│   │   └── DashboardService.php
 │   ├── Traits/
 │   │   └── HasPermissions.php
-│   ├── Notifications/        # Notification classes
-│   └── Console/Commands/    # Custom artisan commands
+│   ├── Notifications/         # Notification classes
+│   └── Console/Commands/     # Custom artisan commands
 ├── database/
-│   ├── migrations/            # 15+ migration files
-│   ├── seeders/               # RolePermission, User, Menu, Inventory, Retail seeders
+│   ├── migrations/           # 15+ migration files
+│   ├── seeders/              # RolePermission, User, Menu, Inventory, Retail seeders
 │   └── factories/
 ├── resources/js/
-│   ├── components/            # Reusable UI (sidebar, nav, shadcn/ui)
+│   ├── components/
+│   │   ├── ui/               # shadcn/ui primitives
+│   │   ├── stat-card.tsx     # Reusable stat display
+│   │   ├── status-badge.tsx  # Status badge variants
+│   │   ├── empty-state.tsx   # Empty state display
+│   │   └── loading-spinner.tsx
 │   ├── hooks/
-│   │   └── use-cart.ts       # Cart state management
-│   ├── layouts/               # App layout with sidebar
-│   ├── pages/                 # All Inertia page components (25+)
+│   │   ├── use-cart.ts       # Cart state management
+│   │   ├── use-notifications.ts
+│   │   └── ...
+│   ├── lib/
+│   │   ├── utils.ts          # Utility functions
+│   │   ├── formatters.ts     # Date, price, status formatters
+│   │   └── api.ts            # API error handling
+│   ├── layouts/              # App layout with sidebar
+│   ├── pages/                # All Inertia page components (25+)
 │   └── types/
 │       └── index.ts           # Full TypeScript interfaces
 ├── routes/
-│   ├── web.php                # All routes (permission-gated)
-│   ├── auth.php               # Authentication routes
-│   └── settings.php          # User settings routes
-└── public/build/              # Compiled production assets
+│   ├── web.php               # All routes (permission-gated)
+│   ├── auth.php              # Authentication routes
+│   └── settings.php         # User settings routes
+└── public/build/             # Compiled production assets
 ```
 
 ---
@@ -559,6 +681,7 @@ After running `php artisan migrate:fresh --seed`, the following test data is ava
 |---|---|---|
 | Admin | `admin@example.com` | `password` |
 | Manager | `manager@example.com` | `password` |
+| Librarian | `librarian@example.com` | `password` |
 | Staff | `staff@example.com` | `password` |
 | Faculty | `faculty@example.com` | `password` |
 | Student | `student@example.com` | `password` |
@@ -617,21 +740,31 @@ php artisan menu:fix-status        # Fix menu availability status
 
 1. **Model**: Create/modify Eloquent model in `app/Models/`
 2. **Migration**: `php artisan make:migration create_xyz_table`
-3. **Controller**: Create in `app/Http/Controllers/`
-4. **Permission**: Add new permission in `RolePermissionSeeder` and assign to roles
-5. **Route**: Add to `routes/web.php` with `permission:your_permission` middleware
-6. **Types**: Add TypeScript interface to `resources/js/types/index.ts`
-7. **Page**: Create React component in `resources/js/pages/`
-8. **Sidebar**: Check permission in `components/app-sidebar.tsx` to show/hide nav link
+3. **Service**: Create service class in `app/Services/` extending `BaseService`
+4. **Form Request**: Create validation class in `app/Http/Requests/`
+5. **API Resource** (optional): Create resource class in `app/Http/Resources/`
+6. **Controller**: Create in `app/Http/Controllers/` and inject Service
+7. **Permission**: Add new permission in `RolePermissionSeeder` and assign to roles
+8. **Route**: Add to `routes/web.php` with `permission:your_permission` middleware
+9. **Types**: Add TypeScript interface to `resources/js/types/index.ts`
+10. **Page**: Create React component in `resources/js/pages/`
+11. **Components**: Use reusable components from `resources/js/components/`
+12. **Formatters**: Add formatting utilities to `resources/js/lib/formatters.ts`
+13. **Sidebar**: Check permission in `components/app-sidebar.tsx` to show/hide nav link
 
 ### Key Conventions
 
 - **Inertia Rendering**: Controllers return `Inertia::render('page/path', [...props])`
 - **Form Submission**: Use `router.post()` / `router.put()` / `router.patch()` from `@inertiajs/react`
-- **Validation**: Server-side validation in controllers; errors auto-propagated to frontend via Inertia
+- **Validation**: Use Form Request classes in `app/Http/Requests/`; errors auto-propagated to frontend
+- **Service Layer**: Inject services in controllers via constructor dependency injection
+- **API Resources**: Use resources for consistent JSON transformation in API responses
 - **Flash Messages**: `back()->with('success', '...')` for success notifications
+- **Error Handling**: Wrap service calls in try-catch blocks with user-friendly messages
 - **Currency**: Philippine Peso (₱) — all monetary values stored as `decimal(10,2)`
 - **CSV Format**: All imports/exports use standard CSV format with headers in first row
+- **Frontend Utils**: Use `lib/formatters.ts` for date/price formatting, `lib/api.ts` for error handling
+- **Reusable Components**: Use `components/stat-card.tsx`, `status-badge.tsx`, `empty-state.tsx` for common patterns
 
 ---
 
